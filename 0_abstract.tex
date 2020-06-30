@@ -12,5 +12,59 @@ security for drive space, and so on. Unfortunately, designing a FDE system that
 can navigate such treacherous tradeoffs efficiently, effectively, and with
 respect to performance and security guarantees is entirely non-trivial. This
 dissertation explores this space of tradeoffs and how we might optimize for one
-concern without violating another given kernel and userland goals that shift
-over time.
+concern without violating another given kernel and/or user space in-context
+invariants that might shift over time.
+
+Full-drive encryption is especially important for mobile devices because they
+contain large quantities of sensitive data yet are easily lost or stolen. As
+this research demonstrates, the standard approach to FDE—the AES block cipher in
+XTS mode—is 3-5x slower than unencrypted storage. Authenticated encryption based
+on stream ciphers is already used as a faster alternative to AES in other
+contexts, such as HTTPS, but the conventional wisdom is that stream ciphers are
+unsuitable for FDE. Used naively in drive encryption, stream ciphers are
+vulnerable to attacks, and mitigating these attacks with on-drive metadata is
+generally believed to ruin performance.
+
+We address the difficulty of using stream ciphers for FDE with StrongBox, a
+stream cipher based FDE layer that is a drop-in replacement for dm-crypt, the
+standard Linux FDE module based on AES-XTS. StrongBox introduces a system design
+and on-drive data structures that exploit certain properties of filesystems to
+avoid costly rekeying penalties and a counter stored in trusted hardware to
+protect against attacks. We implement StrongBox and SwitchCrypt on an ARM
+big.LITTLE mobile processor and test its performance under multiple popular
+production filesystems.
+
+We push the envelope further with SwitchCrypt, a software mechanism that allows
+us to move beyond merely making stream ciphers available for FDE. SwitchCrypt
+enables practical navigation of the tradeoff space made by balancing competing
+security and latency requirements via \emph{cipher switching} in space or time.
+Our key insight in achieving low-overhead switching is to leverage the
+overwrite-averse, append-mostly behavior of underlying solid-state storage to
+trade throughput for reduced energy use and/or certain security properties.
+Similar to StrongBox, we implement SwitchCrypt on an ARM big.LITTLE mobile
+processor and test its performance under the popular F2FS LFS. We provide
+empirical results demonstrating the conditions under which different switching
+strategies are optimal through the exploration of four cases studies.
+
+Finally, with HASCHK, we consider the same stream cipher based cryptographic
+primitives in an alternative domain: data \emph{in motion} rather than at rest.
+Specifically: securing data downloads over the internet. Such downloads come
+with many risks, including the chance that the resource has been corrupted, or
+that an attacker has replaced your desired resource with a compromised version.
+The de facto standard for addressing this risk is the use of \emph{checksums}
+coupled with a secure transport layer; users download a resource, compute its
+checksum, and compare that with an authoritative checksum. Problems with this
+approach include (1) \emph{user apathy}---for most users, calculating and
+verifying the checksum is too tedious; and (2) \emph{co-hosting}---an attacker
+who compromises a resource can trivially compromise a checksum hosted on the
+same system. The co-hosting problem remains despite advancements in tools that
+automate checksum verification and generation. In this dissertation we propose
+\emph{HASCHK}, a resource verification protocol expanding on de facto
+checksum-based integrity protections to defeat co-hosting while automating the
+tedious parts of checksum verification to secure ``data in motion'' downloads
+over the internet.
+
+StrongBox, SwitchCrypt, and HASCHK together demonstrate that security is indeed
+a paramount concern and valid dimension with which to trade off alongside other
+tier-one concerns without compromising data security or requiring obscene
+performance sacrifices, all while staying within a shifting energy budget.
