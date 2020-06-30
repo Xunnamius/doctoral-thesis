@@ -144,7 +144,11 @@ tick label style={font=\small},
 
 % These lines can be commented out to disable the copyright/dedication/epigraph pages
 \makecopyright
-% \makededication
+\makededication
+To my kiddos (who at the time of writing do not yet exist): I peer over the edge
+of human knowledge and reach down into that abyss of the unknown with no other
+motivation than the hope that you may one day benefit. I can't wait to meet you,
+haha!
 % \makeepigraph
 
 %% Make the various tables of contents
@@ -152,6 +156,7 @@ tick label style={font=\small},
 \listoffigures
 \listoftables
 
+\input{8_acknowledgements}
 \input{0_abstract}
 
 \mainmatter
@@ -159,8 +164,18 @@ tick label style={font=\small},
 
 \input{1_intro}
 \input{2_related}
-\input{3_strongbox}
-\input{4_availability}
+
+\chapter{StrongBox: Using Stream Ciphers for High Performance Full Drive Encryption} \label{chp:strongbox}
+\input{3_strongbox/0_abstract}
+
+\chapter{SwitchCrypt: Navigating Tradeoffs in Stream Cipher Based Full Drive Encryption} \label{chp:switchcrypt}
+\input{4_switchcrypt/0_abstract}
+
+\chapter{HASCHK} \label{chp:haschk}
+\input{5_haschk}
+
+\input{6_conclusion}
+\input{7_availability}
 
 % Format a LaTeX bibliography
 \clearpage

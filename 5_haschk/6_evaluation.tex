@@ -1,0 +1,135 @@
+\section{Evaluation} \label{sec:evaluation}
+
+In this section, we evaluate our implementation empirically using a patched
+HotCRP instance and random sampling of papers published in previous
+\CONFERENCE{} proceedings. We then examine the performance impact, deployment
+overhead, and scalability of our implementation. We show that \SYSTEM{} is more
+effective than existing approaches at detecting integrity problems in arbitrary
+downloads over the internet.
+
+\subsection{Security and Performance}
+
+To empirically evaluate our implementation, we launch a lightly modified version
+of the popular open source research submission and peer review software, HotCRP
+(version 2.102; see \secref{availability}). Our modifications allow anyone
+visiting the site to interactively corrupt submissions and manipulate relevant
+DNS entries at will.
+
+For our evaluation, we upload 10 different \CONFERENCE{} PDFs to our HotCRP
+instance. Upon their upload, HotCRP calculates and displays the unique checksum
+(a SHA-256 digest) of each PDF. After each PDF is uploaded, we immediately
+download it and manually calculate a checksum locally, matching each to the
+checksum displayed by the HotCRP software. Next, we utilize the custom
+functionality we patched into HotCRP to populate our DNS backend with each
+file's expected URN.
+
+After installing the frontend into our Google Chrome browser, we again download
+each file. For each observed download, our extension indicates a ``safe''
+judgement. We then utilize our patched functionality to add junk data onto the
+end of each of the uploaded PDFs, thus corrupting them. We also modified HotCRP
+so that it updates the displayed checksums to match their now-corrupted
+counterparts.
+
+Once again, we download each file. Our extension reports an ``unsafe'' judgement
+(a true positive) for each corrupted PDF file. Calculating the local checksum
+and checking it against the value reported by our HotCRP instance leads to a
+match (a false negative; \ie{, the result of co-hosting}), defeating prior
+approaches to both manual and automated checksum verification.
+
+We run this experiment three times, each with different sets of PDFs and using
+both the DNS and DHT based backends. We observe consistent results.
+
+Finally, we utilize our patched functionality to test a ``redirection'' attack
+where the hyperlink pointing to the correct PDF is replaced with a hyperlink to
+a dummy malware file hosted in a distinct malicious DNS zone with conforming
+\SYSTEM{} deployment. When an unsuspecting user clicks such a link, they expect
+to download the PDF document from HotCRP but are instead navigated to a PHP
+script that redirects the request one or more times before landing on the dummy
+malware file. This process corrupts Chrome's \texttt{DownloadItem.referrer}
+property. Even in this case, our implementation correctly flags this download as
+suspicious as the download begins, successfully warning the user.
+
+While evaluating our implementation, we observe no additional network load or
+CPU usage with the extension loaded into Chrome. Measurements are taken using
+the Chrome developer tools. Intuitively, this makes sense given the lightweight
+nature of the cryptographic operations involved.
+
+We also consider the implications of a compromised backend, such as if an
+attacker tampers with the provider's DNS server or its response. Since we trust
+the integrity and authenticity of responses from the backend, this is ultimately
+outside our threat model. However, in the case of a compromised DNS zone by
+itself, at worst the attacker can perpetuate a denial of service attack by
+triggering false positives. Without compromising both the backend and the
+distribution server, the attacker still cannot deliver compromised resources to
+users. Further, we argue a provider has much bigger problems if their DNS zone
+or other backend is compromised.
+
+\subsection{Scalability and Deployment}
+
+As \SYSTEM{} assumes a high availability backend, we conclude that the
+scalability of \SYSTEM{} can be reduced to the scalability of its backend. We
+are aware of no other obstacles to scalability beyond those inherited from the
+underlying backend system.
+
+Obviously, our DNS backend relies on DNS~\cite{DNS1}. DNS was not originally
+designed to transport or store relatively large amounts of data, but the content
+of our DNS TXT records are very small (usually two bytes or less). Further, the
+URNs queryable via DNS request are exactly 112 characters, \ie{the length of a
+BASE32 encoded URN}, and are divided into two 53 character labels, conforming to
+DNS label length limits~\cite{DNS2}.
+
+We are also unaware of any practical limitation on the number of resource
+records a DNS zone file can support. A DNS server can host tens of thousands of
+resource records in their backend file~\cite{DNS1, DNS2}. Moreover, several
+working groups have considered using DNS as a storage medium for checksums/hash
+output, so the concept is not novel. Examples include
+securitytxt~\cite{draft-sectxt} and DKIM~\cite{DKIM}.
+
+Additionally, using DNS as a backend does not add to the danger of amplification
+and other reflection attacks on DNS; these are generic DNS issues addressable at
+other layers of the protocol.
+
+With the HotCRP demo, our entire resource deployment scheme consists of (1) the
+addition of a new TXT entry to our DNS backend and (2) a new value published to
+our DHT backend during the paper (resource) submission process. We argue
+updating DNS record (or DHT value) during the resource deployment process is
+simple enough for developers and providers to implement and presents no
+significant burden to deployment. For reference, we implement the functionality
+that automatically adds (and updates) the DNS TXT records advertising the URNs
+of papers uploaded to our HotCRP instance in under 10 lines of JavaScript.
+
+\subsection{Limitations}
+
+While still effective, our extension would be even more effective if
+Chrome/Chromium or the more general WebExtensions API allowed for an explicit
+\texttt{onComplete} event hook in the downloads API. This hook would fire
+immediately before a file download completes and the file becomes executable,
+\ie{ has its \texttt{.crdownload} or \texttt{.download} extension removed}. The
+hook would consume a \texttt{Promise}/\texttt{AsyncFunction} that kept the
+download in its fully-downloaded but non-complete state until said
+\texttt{Promise} completed. Ideally, this would allow an extension to alter a
+download's \texttt{DangerType} property after some computation, prompting Chrome
+to handle alerting the user using its Dangerous Download
+UX~\cite{ChromeClickThrough}, which would have the advantage of communicating
+intent through the browser's familiar and authoritative UI and prevent the
+corrupted download from becoming immediately executable. Unfortunately, the
+closest the Chrome WebExtensions API comes to allowing \texttt{DangerType}
+mutations is the \texttt{acceptDanger} method on the downloads API, but it is
+not suitable for our purposes because it can only be called after the download
+completes while leaving the file in an accessible and executable state until the
+method is eventually called.
+
+Redirection services, like URI shortening apps, might still lead to false
+positives even with the fallthrough functionality if a domain on the request
+chain has deployed \SYSTEM{}. We view this as a rare scenario, and it does not
+violate \SYSTEM{}'s security guarantees. Further, our extension does not work
+for PDFs and other downloads handled directly by the browser. And, given the
+topology of the webrequest API, iframes and similar elements may require special
+consideration beyond examining \texttt{details.documentUrl}.
+
+Additionally, not all servers/backends on the internet use DNS, and our
+extension does not support downloads made that bypass DNS. In future work, our
+DHT backend would be able to handle such downloads. Further, our extension keeps
+1000 requests in memory so that they can be mapped to download items later in
+time. This might be vulnerable to attacks involving excessive redirection and
+overflow.
