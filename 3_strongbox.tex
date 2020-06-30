@@ -1,0 +1,170 @@
+\chapter{StrongBox I, II, III} \label{chp:strongbox}
+
+In this section we describe the three primary components of the StrongBox
+research project, and define a timeline of completion.
+
+\section{Project Timeline}
+
+These are dates we expect certain research milestones to be accomplished:
+
+\begin{enumerate}
+    \item \textbf{4/2019} Complete use case implementation and case studies.
+    \item \textbf{5/2019} Literature review on FDE theory and formal
+    organization.
+    \item \textbf{5-6/2019} StrongBox II cipher switching draft paper is
+    completed.
+    \item \textbf{6/2019} Formal theoretical framework to model StrongBox
+    security guarantees.
+    \item \textbf{12/2019} Analysis of security model and guarantees versus
+    AES-XTS and other schemes.
+    \item \textbf{2/2020} StrongBox III (theoretical security framework) draft
+    paper is completed.
+\end{enumerate}
+
+\section{StrongBox I: Confidentiality, Integrity, and Performance using Stream Ciphers}
+
+StrongBox I is the original published work demonstrating how recent developments
+in hardware coupled with core insights about filesystem behavior invalidate the
+assumption that practically mitigating attacks against high performance stream
+ciphers for FDE is infeasible.
+
+With this research, it was shown that recent developments in mobile hardware
+invalidate the assumption that stream ciphers are unsuitable for FDE, making it
+possible to take advantage of fast stream ciphers. Modern mobile devices employ
+solid-state storage with Flash Translation Layers (FTL), which operate similarly
+to Log-structured File Systems (LFS). They also include trusted hardware such as
+Trusted Execution Environments (TEEs) and secure storage areas. StrongBox I,
+implemented with the ChaCha20 stream cipher, leveraged these two trends to
+outperform dm-crypt, the de-facto Linux FDE endpoint.
+
+\subsection{Completed Work}
+
+\begin{itemize}
+    \item \textbf{Published.} \textit{StrongBox: Confidentiality, Integrity, and
+    Performance using Stream Ciphers for Full-Drive Encryption} was published in
+    the Proceedings of the Twenty-Third International Conference on
+    Architectural Support for Programming Languages and Operating Systems
+    (ASPLOS'18).
+
+    \item \textbf{Implemented.} A prototype of the StrongBox approach was
+    implemented in C. The full 5000+ LoC source for StrongBox I is available
+    open source (see \appref{availability}).
+
+    \item \textbf{Patented.} The StrongBox approach has been patented by the
+    University of Chicago, pending prosecution and non-provisional filing.
+
+    \item \textbf{Inspired.} Using stream ciphers for Full-Drive Encryption
+    motivated research in a similar vein: using stream ciphers with highly
+    available systems to secure arbitrary resources on the internet (HASCHK).
+\end{itemize}
+
+\section{StrongBox II: Energy, Security, and Performance Tradeoffs with Cipher Switching}
+
+With StrongBox II, we evaluate a new StrongBox implementation capable of using
+ciphers beyond ChaCha20 and AES-CTR; specifically, the following profile 1
+stream ciphers were added to StrongBox: Sosemanuk, HC-128, Rabbit, Salsa20,
+Salsa12, and Salsa8, ChaCha12, ChaCha8, Freestyle, and ARM Neon SIMD accelerated
+versions of ChaCha.
+
+The eSTREAM portfolio ciphers fall into two profiles. Profile 1 contains stream
+ciphers more suitable for software applications with high throughput
+requirements. Profile 2 stream ciphers are particularly suitable for hardware
+applications with restricted resources such as limited storage, gate count, or
+power consumption. This research does not consider profile 2 stream ciphers
+offered by the eSTREAM portfolio.
+
+\subsection{Completed Work}
+
+\begin{itemize}
+    \item \textbf{Cipher abstraction and eSTREAM implementations.} With
+    StrongBox II, we abstracted the cipher interface into an independent
+    subsystem such that StrongBox II functions with any stream or block cipher,
+    including the original ChaCha20. We also included an implementation of the
+    Freestyle randomized output stream cipher for consideration with FDE,
+    similarly implemented in C. The full source code for StrongBox II is
+    available alongside the original (see \appref{availability}).
+
+    \item \textbf{Cipher switching framework and tradeoff exploration.} We
+    performed experiments to quantify the performance and security properties of
+    the various ciphers we implemented. From that, we engineered a ``cipher
+    switching'' abstraction allowing StrongBox to switch (offline) between any
+    cipher in its library. Further, by studying the contention between
+    StrongBox's observed \emph{energy} use, the \emph{security} of the StrongBox
+    construction given a certain cipher configuration, and the
+    \emph{performance} of the construction under a given workload, we modeled a
+    navigable tradeoff space where manipulating magnitude in one dimension
+    yields a non-linear change in another.
+
+    \item \textbf{Cipher switching strategies.} We implemented five ``switching
+    strategies'' based on our experimental observations. These strategies allow
+    StrongBox to navigate the aforementioned tradeoff space both offline
+    \emph{and online}.
+\end{itemize}
+
+\subsection{Current Work}
+
+\begin{itemize}
+    \item \textbf{4-5/2019}
+        \begin{itemize}
+            \item Complete experimental evaluation of (online) cipher switching
+            strategies.
+            \item Finish use case framework implementation and determine worthy
+            use case implementations based on the aforementioned evaluation.
+            \item Complete study and experimental evaluation of worthy use
+            cases.
+        \end{itemize}
+    \item \textbf{5-6/2019}
+        \begin{itemize}
+            \item Collate research into paper: \textit{StrongBox II: A Study of
+            Practical Tradeoffs Between Energy, Performance, and Security}.
+        \end{itemize}
+\end{itemize}
+
+\subsection{Considerations}
+
+At this point in the project, we have established a useful set of pareto curves,
+the cipher switching strategy implementations are practical, and our use cases
+are built on top of those switching strategies. Our biggest concern is accurate
+and meaningful energy readings. Integrating the energy use telemetry (i.e.
+Energymon) directly into the StrongBox core instead of at the test fixture level
+along with other tweaks and checks should address this. However, even without a
+robust set of metrics on energy use, the performance-security curve alone
+motivates the switching strategies and, in turn, the use cases.
+
+\section{StrongBox III: Theoretical Framework for Analyzing StrongBox FDE}
+
+With the final component of this research, at minimum we want: (1) define a set of
+formal FDE security notions in context, (2) define the cryptographic goals and
+guarantees of StrongBox, (3) introduce a theoretical framework and models to
+evaluate StrongBox, (4) potentially explore AES-XTS security guarantees versus
+StrongBox guarantees.
+
+\subsection{Current Work}
+
+\begin{itemize}
+    \item \textbf{5-6/2019}
+        \begin{itemize}
+            \item Complete review of literature on relevant theoretical
+            frameworks that examine security within the constraints of FDE, e.g.
+            efficient constructions that achieve security in context and subject
+            to practical constraints (Rogaway, Fruhwirth, et al).
+            \item Outline well-defined cryptographic goals StrongBox should
+            achieve; outline guarantees any FDE scheme is expected to provide.
+        \end{itemize}
+    \item \textbf{6-12/2019}
+        \begin{itemize}
+            \item Introduce theoretical framework to formalize important
+            security notions and evaluate StrongBox FDE, perhaps under IND-CPA,
+            IND-CCA, ``time-to-bruteforce'' where relevant, or related
+            definitions.
+            \item Explore AES-XTS security guarantees versus StrongBox ciphers
+            in an appropriate mode, perhaps including key management concerns
+            (e.g. circular encryption) and StrongBox's inherent cryptographic
+            agility.
+        \end{itemize}
+    \item \textbf{1-2/2020}
+        \begin{itemize}
+            \item Collate research into paper: \textit{A Formal Analysis of
+            StrongBox FDE}.
+        \end{itemize}
+\end{itemize}
