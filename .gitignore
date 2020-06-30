@@ -12,7 +12,8 @@
 *.lof
 *blx.bib
 _minted*
-out
+out/*
+!out/.gitkeep
 !dickens-*.pdf
 !slides-*.pdf
 !*.dni.*

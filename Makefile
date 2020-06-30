@@ -40,7 +40,6 @@ $(CRNAME): $(TOP-LEVEL-ROOT).pdf
 	$(GHOSTSCRIPT) -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dEmbedAllFonts=true -sOutputFile=$(CRNAME).pdf -f $(TOP-LEVEL-ROOT).pdf
 
 clean:
-	rm -f *.bbl *.blg *-blx.bib *.lo* *.toc
-	rm -f *.pdf *.aux* *.out *.xml *.fls *.fdb* *.gz
-	rm -rf out _minted*
+	rm -rf *.gz *.aux *.blg *.bbl *.out *.log *.xml *.fls *.toc *.lot *.lof *.fdb* *.auxlock *blx.bib out/_minted* _minted* out
 	mkdir out
+	touch out/.gitkeep
