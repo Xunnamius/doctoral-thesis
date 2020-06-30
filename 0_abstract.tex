@@ -1,24 +1,16 @@
 \abstract
-Security is an important concern among several in modern computer systems. These
-concerns often exist in contention over a set of finite resources, e.g. DRAM
-bandwidth/capacity, CPU time, drive space. These create a space of possible
-tradeoffs that we can optimize against. However, exploiting the slack these
-spaces expose in the context of full-drive encryption (FDE) and file systems is
-not straightforward.
-
-Full-drive encryption is especially important for mobile devices because they
-contain large quantities of sensitive data yet are easily lost or stolen. As
-this research demonstrates, the standard approach to FDE—the AES block cipher in
-XTS mode—is 3-5x slower than unencrypted storage. Authenticated encryption based
-on stream ciphers is already used as a faster alternative to AES in other
-contexts, such as HTTPS, but the conventional wisdom is that stream ciphers are
-unsuitable for FDE. Used naively in drive encryption, stream ciphers are
-vulnerable to attacks, and mitigating these attacks with on-drive metadata is
-generally believed to ruin performance.
-
-With this research, we first demonstrate that recent developments in mobile
-hardware invalidate this assumption, making it possible to use fast stream
-ciphers for FDE. Next, we evaluate a new StrongBox implementation capable of
-using ciphers beyond ChaCha20 and AES-CTR to capitalize on security,
-performance, and energy tradeoffs. Finally, we will present a theoretical
-framework formally analyzing the security of the StrongBox FDE construction.
+The security of data at rest---widely understood as FDE or Full-Drive
+Encryption---is an important concern among several in modern computer systems.
+These concerns exist in contention over a set of finite resources. For instance:
+a device that is battery-constrained must remain within its energy budget which
+may change over time, e.g. when a device enters ``battery-saver mode'';
+regardless, this device must meet certain performance guarantees or the user
+experience will suffer; above all, the data on the device must be secure from
+adversaries; and the device has a finite amount of drive space available. At any
+given moment we trade battery life for performance, performance for security,
+security for drive space, and so on. Unfortunately, designing a FDE system that
+can navigate such treacherous tradeoffs efficiently, effectively, and with
+respect to performance and security guarantees is entirely non-trivial. This
+dissertation explores this space of tradeoffs and how we might optimize for one
+concern without violating another given kernel and userland goals that shift
+over time.
