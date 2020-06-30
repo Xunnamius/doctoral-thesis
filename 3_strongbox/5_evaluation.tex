@@ -66,14 +66,14 @@ configurations:
   to the backing store. We use this as the baseline measurement of the
   filesystem's performance without any encryption.
 \item \textit{StrongBox}: Filesystem mounted atop a BUSE virtual block
-  device provided by our StrongBox implementation to perform full-drive
+  device provided by our StrongBox implementation to perform full drive
   encryption.
 \item \textit{dm-crypt}: Filesystem mounted atop a Device Mapper
  ~\cite{LinuxDeviceMapper} higher-level virtual block device provided by
-  dm-crypt to perform full-drive encryption, which itself is mounted atop a
+  dm-crypt to perform full drive encryption, which itself is mounted atop a
   BUSE virtual block device with pass through behavior identical to the device
   used in the baseline configuration. dm-crypt was configured to use AES-XTS as
-  its full-drive encryption algorithm. All other parameters were left at their
+  its full drive encryption algorithm. All other parameters were left at their
   default values.
 \end{enumerate}
 
@@ -322,7 +322,7 @@ filesystem in the vast majority of outcomes.
 
 We then test to see if our general performance improvement can be attributed to
 the use of a stream cipher over a block cipher. dm-crypt implements AES in XTS
-mode to provide full-drive encryption functionality.
+mode to provide full drive encryption functionality.
 \figref{microbench-aes-vs-chacha} describes the relationship between ChaCha20,
 the cipher of choice for our implementation of StrongBox, and the AES cipher.
 Swapping out ChaCha20 for AES-CTR resulted in slowdowns of up to $1.33\times$
@@ -348,7 +348,7 @@ support is available.
 
 \subsection{Overhead with a Full Drive}
 During I/O operations under an appropriate choice of LFS, we have shown that
-full-drive encryption provided by StrongBox outperforms full-drive encryption
+full drive encryption provided by StrongBox outperforms full drive encryption
 provided by dm-crypt. However, this is not necessarily the case when the backing
 store becomes full and the LFS is forced to cope with an inability to write
 forward as efficiently.

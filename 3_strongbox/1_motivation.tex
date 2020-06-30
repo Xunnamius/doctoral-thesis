@@ -1,6 +1,6 @@
 \section{Motivation} \label{sec:sb-motivation}
 
-Full-drive encryption (FDE) is especially important for mobile devices because
+Full drive encryption (FDE) is especially important for mobile devices because
 they contain large quantities of sensitive data yet are easily lost or stolen.
 Unfortunately, the standard approach to FDE---the AES block cipher in XTS
 mode---is 3--5x slower than unencrypted storage. Authenticated encryption based on
@@ -25,14 +25,14 @@ performance under multiple popular production LFSes. We find that StrongBox
 improves read performance by as much as $2.36\times$ ($1.72\times$ on average)
 while offering stronger integrity guarantees.
 
-Full-drive encryption (FDE)\footnote{The common term is full-\emph{disk}
+Full drive encryption (FDE)\footnote{The common term is full \emph{disk}
 encryption, but this work targets SSDs, so we use \emph{drive}.} is an essential
 technique for protecting the privacy of data at rest. For mobile devices,
 maintaining data privacy is especially important as these devices contain
 sensitive personal and financial data yet are easily lost or stolen. The current
 standard for securing data at rest is to use the AES cipher in XTS
-mode~\cite{XTS, NISTXTS}. Unfortunately, employing AES-XTS increases
-read/write latency by 3--5$\times$ compared to unencrypted storage.
+mode~\cite{XTS, NISTXTS}. Unfortunately, employing AES-XTS increases read/write
+latency by 3--5$\times$ compared to unencrypted storage.
 
 It is well known that authenticated encryption using \emph{stream}
 ciphers---such as ChaCha20~\cite{ChaCha20}---is faster than using AES (see
