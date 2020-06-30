@@ -1,0 +1,108 @@
+\section{Implementation} \label{sec:hc-implementation}
+
+We implement a proof-of-concept HASCHK frontend as a Google Chrome extension.
+To demonstrate the general applicability of our approach, our frontend currently
+works with two backends: (1) directly with DNS via Google's JSON API for DNS
+over HTTPS (DoH) and (2) indirectly with DHT (Ring OpenDHT) via a local
+Representational State Transfer (REST) API we designed to mimic the response
+syntax of Google's DoH JSON API. Other candidate backends include storage
+clusters, relational and non-relational databases, and any high availability
+key-value store.
+
+Our extension operates following the high level overview in \figref{protocol}
+with some key implementation-specific functionality that we explore in the
+remainder of this subsection. After the user initiates a download either
+directly (\eg{ typing a URI manually}) or by following a hyperlink, our
+extension, having observed the initial web request, associates that request with
+the new download item. The original request may have directly triggered the
+download or the download may have been triggered after one or more redirections.
+Our extension derives the correct BD in both cases (see below). At this point,
+if the backend does not exist or does not conform to the protocol, the protocol
+terminates. Otherwise, after the download completes, a URN is calculated and
+combined with the BD to make a final query to the backend. In effect, this query
+asks: \emph{is this resource compromised?} If the response to the query is
+negative (\ie{ a DNS TXT record or DHT data value}), the extension considers the
+resource validated. On the other hand, if the response to the query is positive
+(\ie{ no record found or bad data value returned}), the extension considers the
+resource compromised, deletes the resource file, and warns the user.
+
+In keeping with UX suggestions of prior work, our extension is virtually
+transparent to end users in the common case that a download is successfully
+verified by a provider's backend or when HASCHK has not been properly
+deployed by a provider. However, in the relatively uncommon case that a resource
+is deemed compromised, the extension will delete the file and alert the user
+with the primary option to ``dismiss'' the alert, mimicking Chrome's own highly
+effective dangerous download warning~\cite{ChromeClickThrough}. Specifically:
+the user has the option of clicking through the warning via a low-key secondary
+interface where they can force the extension to ignore the compromised nature of
+the resource \emph{the next time it is downloaded}, forcing the user to trigger
+the download again. This inconvenience, favoring users' security over choice, is
+in keeping with the recommendations of prior work regarding security warning UX
+(see \secref{hc-motivation}).
+
+As no JavaScript OpenDHT client implementation exists, we developed a REST API
+to facilitate communication between our extension and the Ring OpenDHT network
+via HTTP and JSON. In a production implementation, a JavaScript OpenDHT client
+would be baked directly into the extension.
+
+Deploying the DNS backend is as simple as adding certain TXT records to our DNS
+zone. This is a straightforward operation. Similarly, deploying the DHT backend
+requires adding certain key-value pairs to the OpenDHT network, which is
+trivial. Moreover, both DNS and DHT backends are performant and highly
+available. The Ring OpenDHT network is also free to use. In the case of DNS, the
+vast majority of web-facing providers and IT teams are already using it, already
+pay for their own DNS zones, and are already quite familiar with configuring and
+managing them. Hence, no exotic secondary backend system is required for
+providers with web servers. Additionally, we argue updating the URNs stored by
+these backends automatically---by integrating a URN calculation and record
+insertion/update step into a modern development toolchain or resource deployment
+pipeline---is relatively low-effort and straightforward for providers.
+
+No application or website source code changes, costly user-facing server or web
+infrastructure customizations, or modifications to web standards are needed to
+enable our extension to protect a provider's resources. Given a production-ready
+implementation of our frontend---coupled with the near ubiquitous adoption of
+DNS---HASCHK (with a DNS backend) could be deployed immediately by interested
+providers.
+
+\subsection{URNs, BDs, and Fallthrough in Google Chrome}
+
+BD derivation in the browser is non-trivial. Users can initiate downloads
+through clicking links inside \emph{and outside} the browser (\eg{ in an email
+application}), through asynchronous JavaScript, and by entering URIs into the
+browser manually. To catch these and other edge cases, we implement our
+extension using the WebRequest API~\cite{ExtensionAPI}, which allows us to
+monitor all navigation events, collate redirects into an interrogable chain of
+requests, and associate new download items with the URI where they were
+originally initiated.
+
+To query the backend, we: (1) BASE32 encode the resource's URN. (2) Divide the
+112-character result into two 56-character strings \texttt{C1} and \texttt{C2}.
+(3) We calculate the BD, which is either the 3LD and 2LD from
+\texttt{details.originUrl}. We choose by issuing up to two queries of the form
+\texttt{AL.BD}, where the Application Label (AL) is the constant string
+\texttt{\_haschk}, looking for a response containing the value \texttt{OK}. We
+first query the 3LD as BD and, if we do not receive the proper response there,
+query the 2LD as BD. If the proper response is not received from either query,
+the extension assumes HASCHK has not been properly deployed and terminates.
+(4) Otherwise, concatenating C1, C2, AL, and BD, we issue a query of the form
+\texttt{C1.C2.AL.BD}, again looking for a response containing \texttt{OK}
+(negative) or that the query was not found (positive).
+
+To handle redirection, we use Chrome's Web Request API to associate redirected
+requests with one another. The originating request's \texttt{origin} at the top
+of this chain is used to derive the BD using the \texttt{details.originUrl} and
+\texttt{details.documentUrl} properties (also avoiding iframe issues). This
+prevents an adversary from trivially fooling HASCHK by replacing a legitimate
+hyperlink with a malicious one. A naive implementation might use the
+\texttt{DownloadItem.referrer} property to derive the BD, since it should be
+populated with the originating URL. Unfortunately, this property can be
+manipulated with one or more redirections causing the BD to point into the
+attacker's DNS zone. If the attacker properly deploys a HASCHK backend, they
+could then trivially force false negatives.
+
+Keeping a chain of associated requests also allows us to implement
+``fallthrough'' functionality where, if the original request at the head of the
+chain has not deployed HASCHK, the extension can walk the chain, checking
+each point of redirection for a proper HASCHK deployment. This ensures URL
+shorteners and other redirection services do not trigger false positives.

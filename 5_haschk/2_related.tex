@@ -1,8 +1,8 @@
-\section{Related Work} \label{sec:related}
+\section{Related Work} \label{sec:hc-related}
 
 In this section, we examine prior approaches to guaranteeing resource integrity
 over the internet. We then highlight some drawbacks to these approaches and how
-\SYSTEM{} differs. \\
+HASCHK differs. \\
 
 \noindent\textbf{Anti-malware software, heuristics, and blacklists.}
 Anti-malware software is a heuristic-based program designed for the specific
@@ -23,8 +23,8 @@ are also reactive rather than proactive; hence, they are generally ineffective
 at detecting active or novel attacks on the integrity of the resources
 downloaded over the internet.
 
-On the other hand, \SYSTEM{} relies on no heuristics or blacklists and is not
-anti-malware software. \SYSTEM{} is a protocol for automating checksum
+On the other hand, HASCHK relies on no heuristics or blacklists and is not
+anti-malware software. HASCHK is a protocol for automating checksum
 verification of resources. This ensures download integrity---that a user is
 receiving the expected resource a provider is advertising---not that the
 expected resource is not malware. \\
@@ -37,15 +37,15 @@ referenced is the same as the resource retrieved by an end user.''~\cite{LF}.
 The World Wide Web Consortium's (W3C) Subresource Integrity (SRI) describes a
 similar HTML-based scheme designed exclusively with CDNs and web assets in mind.
 
-Like \SYSTEM{}, both LF and SRI employ cryptographic digests to ensure no
-changes of any kind have been made to a resource~\cite{SRI}. Unlike \SYSTEM{},
+Like HASCHK, both LF and SRI employ cryptographic digests to ensure no
+changes of any kind have been made to a resource~\cite{SRI}. Unlike HASCHK,
 LF and SRI apply \emph{only to resources referenced by script and link HTML
-elements}; \SYSTEM{}, on the other hand, can ensure the integrity of \emph{any
+elements}; HASCHK, on the other hand, can ensure the integrity of \emph{any
 arbitrary resource downloaded over the internet}, even outside of HTML web pages
 and browser software. Further, the checksums contained in the HTML source must
 be accurate for SRI to work. If the system \emph{behind} the CDN is compromised,
 the attacker can alter the HTML and inject a malicious checksum or even strip
-checksums from the HTML entirely. With \SYSTEM{}, however, an attacker would
+checksums from the HTML entirely. With HASCHK, however, an attacker would
 additionally have to compromise the separate backend system that advertises the
 provider's resources, thus raising the bar. \\
 
@@ -54,7 +54,7 @@ deprecated email and HTTP header that delivers a checksum similar to those used
 by Subresource Integrity. It was removed from the HTTP/1.1 specification because
 of the inconsistent implementation of partial response handling between
 vendors~\cite{HTTP1.1}. Further, the header could be easily stripped off or
-modified by proxies and other intermediaries~\cite{MD5Header}. \SYSTEM{}
+modified by proxies and other intermediaries~\cite{MD5Header}. HASCHK
 exhibits none of these weaknesses. \\
 
 \noindent\textbf{Deterministic Build Systems and Binary Transparency.} A
@@ -69,11 +69,11 @@ be established that allows for public verification of the \emph{Deployment},
 \emph{Maintenance}, and \emph{Retirement} supply chain phases. Companies such as
 Mozilla refer to the latter as ``Binary Transparency.''
 
-Like \SYSTEM{}, binary transparency establishes a public verification scheme
+Like HASCHK, binary transparency establishes a public verification scheme
 that allows third party consumers access to a listing of source updates
 advertised by a provider~\cite{BinaryTransparency}. Consumers can leverage
 deterministic build systems and Binary Transparency together to ensure their
-software is the same software deployed to every other system. Unlike \SYSTEM{},
+software is the same software deployed to every other system. Unlike HASCHK,
 binary transparency only allows a user to verify the integrity of \emph{source
 updates to binaries}; our protocol allows a user to verify the integrity of
 \emph{any arbitrary resource} while specifically addressing co-hosting. \\
@@ -87,7 +87,7 @@ to stand-in for SRI, Stickler inherits some of SRI's limitations. Specifically:
 Stickler was not designed to protect arbitrary resource downloads and, if the
 publisher's server is compromised, Stickler's bootloader can be stripped out of
 the initial HTTP response altogether. Something like this is not possible with
-\SYSTEM{}.
+HASCHK.
 
 The automated checksum verification approach described by Cherubini et
 al.~\cite{Cherubini}, also based on SRI, is similarly vulnerable to (and relies
@@ -106,4 +106,4 @@ attacker can just inject the compromised checksum somewhere in the HTML source
 alongside the legitimate checksum to similarly pass off compromised resources to
 users; (3) does not support direct downloads, \ie{ when a user enters a
 resource's URI into the browser manually rather than click a hyperlink}. None of
-this is a problem for \SYSTEM{}.
+this is a problem for HASCHK.

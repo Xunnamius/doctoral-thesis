@@ -1,27 +1,70 @@
-\section{Evaluation} \label{sec:evaluation}
+\section{Evaluation} \label{sec:hc-evaluation}
 
-In this section, we evaluate our implementation empirically using a patched
-HotCRP instance and random sampling of papers published in previous
-\CONFERENCE{} proceedings. We then examine the performance impact, deployment
-overhead, and scalability of our implementation. We show that \SYSTEM{} is more
-effective than existing approaches at detecting integrity problems in arbitrary
-downloads over the internet.
+\subsection{Security Goals and Threat Model}
+
+The goal of HASCHK is to ensure the integrity of arbitrary resources
+downloaded over the internet, even in the case where the system hosting those
+resources is completely compromised. Given a HASCHK-aware client and a
+resource provider with a conforming backend, the user must be automatically
+warned whenever what they are downloading does not match a corresponding
+authoritative checksum. Given proper deployment, HASCHK should, to whatever
+extent possible, operate without issuing false negatives, \ie{ compromised
+resources that do not trigger a warning}, or false positives, \ie{ benign
+resources that do trigger a warning}.
+
+We consider the following entities: (1) a HASCHK-aware client as the
+\emph{frontend}, (2) a \emph{server} (or servers) as the distribution system
+hosting the \emph{resource}, and (3) a separate high availability system
+implementing HASCHK as the \emph{backend}. Specifically, we consider a
+\emph{generic frontend} that might be any web-facing software, such as
+FileZilla, and a \emph{browser frontend} such as Google Chrome or Mozilla
+Firefox.
+
+For a generic frontend, we assume the adversary can make the server respond to a
+resource request with any resource, including a compromised version of a
+resource. We also assume the adversary can tamper with any other server
+response, including adding, removing, or manipulating one or more checksums if
+they appear.
+
+For a browser frontend and web server, we contemplate two scenarios. From either
+an existing tab/window or a new one, the user (1) directly enters the resource
+URI into the browser, initiating a direct download or (2) navigates to an HTML
+file (\emph{web page}) on the server containing a hyperlink pointing to the
+resource. The user clicks this hyperlink to download the resource. This resource
+is hosted on the same server as the web page or externally on a third party
+server such as a CDN. Both are valid deployments in the context of HASCHK. We
+assume the adversary can manipulate the resource and web page wherever they are
+stored. The adversary may: (1) compromise the resource, (2) modify the hyperlink
+to point to a compromised resource anywhere on the internet, and/or (3) add,
+remove, or manipulate any checksums that appear on the web page or elsewhere.
+
+Hence, we do not trust the integrity of the server's responses in any scenario.
+We do, however, trust the integrity and authenticity of the backend's responses.
+Further, we expect the backend to be highly available. In
+\secref{hc-evaluation}, we go over the implications of a compromised backend.
+
+As an aside, we consider here the standard non-HASCHK case where the resource
+is co-hosted alongside a web page containing both a hyperlink pointing to the
+resource \emph{and an authoritative checksum corresponding to the resource}. As
+demonstrated throughout the paper, when a server co-hosting resources and
+checksums is compromised, it is trivial to manipulate both checksum and
+resource, rendering all forms of checksum verification irrelevant. Assuming
+proper deployment, it is the goal of HASCHK to ensure this is never the case.
 
 \subsection{Security and Performance}
 
 To empirically evaluate our implementation, we launch a lightly modified version
 of the popular open source research submission and peer review software, HotCRP
-(version 2.102; see \secref{availability}). Our modifications allow anyone
+(version 2.102; see \cref{app:availability}). Our modifications allow anyone
 visiting the site to interactively corrupt submissions and manipulate relevant
 DNS entries at will.
 
-For our evaluation, we upload 10 different \CONFERENCE{} PDFs to our HotCRP
-instance. Upon their upload, HotCRP calculates and displays the unique checksum
-(a SHA-256 digest) of each PDF. After each PDF is uploaded, we immediately
-download it and manually calculate a checksum locally, matching each to the
-checksum displayed by the HotCRP software. Next, we utilize the custom
-functionality we patched into HotCRP to populate our DNS backend with each
-file's expected URN.
+For our evaluation, we upload 10 different PDFs to our HotCRP instance. Upon
+their upload, HotCRP calculates and displays the unique checksum (a SHA-256
+digest) of each PDF. After each PDF is uploaded, we immediately download it and
+manually calculate a checksum locally, matching each to the checksum displayed
+by the HotCRP software. Next, we utilize the custom functionality we patched
+into HotCRP to populate our DNS backend with each file's expected URN.
 
 After installing the frontend into our Google Chrome browser, we again download
 each file. For each observed download, our extension indicates a ``safe''
@@ -42,7 +85,7 @@ both the DNS and DHT based backends. We observe consistent results.
 Finally, we utilize our patched functionality to test a ``redirection'' attack
 where the hyperlink pointing to the correct PDF is replaced with a hyperlink to
 a dummy malware file hosted in a distinct malicious DNS zone with conforming
-\SYSTEM{} deployment. When an unsuspecting user clicks such a link, they expect
+HASCHK deployment. When an unsuspecting user clicks such a link, they expect
 to download the PDF document from HotCRP but are instead navigated to a PHP
 script that redirects the request one or more times before landing on the dummy
 malware file. This process corrupts Chrome's \texttt{DownloadItem.referrer}
@@ -66,8 +109,8 @@ or other backend is compromised.
 
 \subsection{Scalability and Deployment}
 
-As \SYSTEM{} assumes a high availability backend, we conclude that the
-scalability of \SYSTEM{} can be reduced to the scalability of its backend. We
+As HASCHK assumes a high availability backend, we conclude that the
+scalability of HASCHK can be reduced to the scalability of its backend. We
 are aware of no other obstacles to scalability beyond those inherited from the
 underlying backend system.
 
@@ -121,8 +164,8 @@ method is eventually called.
 
 Redirection services, like URI shortening apps, might still lead to false
 positives even with the fallthrough functionality if a domain on the request
-chain has deployed \SYSTEM{}. We view this as a rare scenario, and it does not
-violate \SYSTEM{}'s security guarantees. Further, our extension does not work
+chain has deployed HASCHK. We view this as a rare scenario, and it does not
+violate HASCHK's security guarantees. Further, our extension does not work
 for PDFs and other downloads handled directly by the browser. And, given the
 topology of the webrequest API, iframes and similar elements may require special
 consideration beyond examining \texttt{details.documentUrl}.

@@ -1,4 +1,4 @@
-\section{SwitchCrypt Case Studies}\label{sec:usecases}
+\section{Case Studies} \label{sec:sc-usecases}
 
 In this section, we provide four case studies and empirical results
 demonstrating the practical utility of cipher switching. We cover a wide range
@@ -9,12 +9,12 @@ within an energy budget (\cref{subsec:uc1}). We also demonstrate the utility of
 both temporal and spatial switching strategies, exploring the range of
 conditions under which certain strategies are optimal.
 
-\subsection{Balancing Security Goals with a Constrained Energy Budget}\label{subsec:uc1}
+\subsection{Balancing Security Goals with a Constrained Energy Budget} \label{subsec:uc1}
 
 This usecase illustrates that, because latency and energy use are correlated
 among the ciphers we examined, we can exploit that property using temporal
 Forward switching to save our battery. We revisit the motivating example from
-\secref{motivation}, demonstrating that the ability to re-cipher individual
+\secref{sc-motivation}, demonstrating that the ability to re-cipher individual
 nuggets allows us to complete our task while staying within our energy budget.
 
 To simulate a 400MB video download (in parts), we begin sequentially writing 10
@@ -28,7 +28,7 @@ cipher. We repeat this experiment three times.
 \begin{figure}[ht] \textbf{Battery Saver Use Case: Energy-Security Tradeoff vs
    Strict Energy Budget}\par\medskip
    \centering
-   {\input{data/usecase-battery.tex}} \caption{Median sequential write total
+   {\input{data/sc/usecase-battery.tex}} \caption{Median sequential write total
    energy use with respect to time and security score with respect to time.}
   \label{fig:usecase-battery}
 \end{figure}
@@ -59,7 +59,7 @@ learned is that SwitchCrypt enables the system to move to the right point in the
 energy/security tradeoff space that the current task can still be accomplished
 before the battery is drained.
 
-\subsection{Variable Security Regions}\label{subsec:uc2}
+\subsection{Variable Security Regions} \label{subsec:uc2}
 
 This usecase illustrates utility of spatial Selective switching to achieve a
 performance win over prior work, where the entire drive is encrypted with a
@@ -89,7 +89,7 @@ Balanced operations. We repeat this experiment three times.
 \begin{figure}[ht] \textbf{VSR Use Case: ChaCha8 vs Freestyle Secure Sequential
 4KB, 5MB Performance}\par\medskip
    \centering
-   {\input{data/usecase-vsr-bar.tex}} \caption{Median sequential read and
+   {\input{data/sc/usecase-vsr-bar.tex}} \caption{Median sequential read and
    write performance comparison of 5MB I/O with 3-to-1 ratio of ChaCha8 nuggets
    to Freestyle Secure nuggets, respectively.}
   \label{fig:usecase-vsr-bar}
@@ -106,7 +106,7 @@ I/O operations. Using SwitchCrypt Selective switching versus prior work results
 in a reduction of 3.1x to 4.8x for read latency and 1.6x to 2.8x for write
 latency, all without compromising the security needs of the most sensitive data.
 
-\subsection{Responding to End-of-Life Slowdown in SSDs}\label{subsec:uc3}
+\subsection{Responding to End-of-Life Slowdown in SSDs} \label{subsec:uc3}
 
 This usecase illustrates using temporal Forward switching to offset the
 debilitating decline in performance when SSDs reach end-of-life
@@ -127,7 +127,7 @@ slowdown, and repeat the experiment three times.
 
 \begin{figure}[ht] \textbf{SSD EoL Use Case: Latency-Security Tradeoff vs
    Goals}\par\medskip
-   {\input{data/usecase-eol-tradeoff.tex}} \caption{Median sequential and
+   {\input{data/sc/usecase-eol-tradeoff.tex}} \caption{Median sequential and
    random 40MB read and write performance comparison: baseline versus simulated
    faulty block device.}
   \label{fig:usecase-eol-tradeoff}
@@ -142,7 +142,7 @@ Our goal is to remain under the latency ceiling while remaining above the
 security floor. Thanks to Forward switching, accesses to highly trafficked areas
 of the drive can remain performant even during drive end-of-life.
 
-\subsection{Custody Panic: Device Data Under Duress}\label{subsec:uc4}
+\subsection{Custody Panic: Device Data Under Duress} \label{subsec:uc4}
 
 This usecase illustrates the utility of spatial Mirrored switching to take
 advantage of more energy-efficient high-performance ciphers while retaining the
@@ -164,7 +164,7 @@ state as quickly as possible.
 
 \begin{figure}[ht] \textbf{Custody Panic Use Case: Security Goals vs Time}\par\medskip
    \centering
-   {\input{data/usecase-custody.tex}} \caption{Actual security score vs
+   {\input{data/sc/usecase-custody.tex}} \caption{Actual security score vs
    security goal with respect to the time and ISE.}
   \label{fig:usecase-custody}
 \end{figure}

@@ -1,4 +1,4 @@
-\section{Evaluation}\label{sec:evaluation}
+\section{Evaluation} \label{sec:sc-evaluation}
 
 \subsection{Experimental Setup}
 
@@ -55,11 +55,11 @@ In this section we answer the following questions:
  versus prior work? (\cref{subsec:4})
 \end{enumerate}
 
-\subsection{Switching Strategies Under Various Workloads}\label{subsec:1}
+\subsection{Switching Strategies Under Various Workloads} \label{subsec:1}
 
 \begin{figure}[ht]
   \textbf{Baseline Cipher I/O Performance}\par\medskip
-  {\input{data/tradeoff-no-ratios.tex}} \caption{Median sequential and random
+  {\input{data/sc/tradeoff-no-ratios.tex}} \caption{Median sequential and random
   read and write performance baseline.}
  \label{fig:tradeoff-no-ratios}
 \end{figure}
@@ -89,11 +89,11 @@ our timing setup when capturing extremely fast events occurring close together
 in time. This is why ChaCha8 sometimes appears with higher latency than
 ChaCha20 for normalized 4KB workloads. ChaCha8 is not slower than ChaCha20.
 
-\subsection{Reaching Between Static Configuration Points}\label{subsec:2}
+\subsection{Reaching Between Static Configuration Points} \label{subsec:2}
 
 \begin{figure}[ht]
   \textbf{Forward Switching I/O Ratio Performance}\par\medskip
-  {\input{data/tradeoff-with-ratios.tex}} \caption{Median sequential and
+  {\input{data/sc/tradeoff-with-ratios.tex}} \caption{Median sequential and
   random read and write performance comparison of Forward switching to
   baseline.}
  \label{fig:tradeoff-with-ratios}
@@ -119,7 +119,7 @@ can achieve dynamic security/energy tradeoffs reaching points not accessible
 with prior work, all with minimal overhead.
 
 Again, due to the overhead of metadata management for non-Freestyle ciphers (see
-\secref{implementation}) and the fast completion time of the 4KB workloads
+\secref{sc-implementation}) and the fast completion time of the 4KB workloads
 preventing SwitchCrypt from taking advantage of amortization, ChaCha8 and
 ChaCha20 take longer to complete than the higher scoring Freestyle Fast for 4KB
 reads. This advantage is not enough to make the ratios involving Freestyle
@@ -135,7 +135,7 @@ means these penalties are paid more often, ballooning latency.
 \begin{figure}[ht]
   \textbf{Mirrored and Selective Switching I/O Ratio Performance}\par\medskip
   \centering
-  {\input{data/mirrored-selective-baseline.tex}} \caption{Median sequential
+  {\input{data/sc/mirrored-selective-baseline.tex}} \caption{Median sequential
   and random read and write performance comparison of Mirrored and Selective
   switching strategies to baseline.}
  \label{fig:mirrored-selective-baseline}
@@ -161,9 +161,9 @@ experiments, the backing store can be considered partitioned in half. This
 overhead is most egregious for the 4KB Mirrored write workload. This makes
 Selective preferable to Mirrored; however, Selective can never converge the
 backing store to a single cipher configuration or survive the loss of an entire
-region (see: \secref{usecases}).
+region (see: \secref{sc-usecases}).
 
-\subsection{Cipher Switching Overhead}\label{subsec:3}
+\subsection{Cipher Switching Overhead} \label{subsec:3}
 
 From the results of the previous three experiments, we calculate that Forward
 switching has average overhead at 0.08x/0.10x for 40MB, 5MB and 512KB read/write
@@ -186,21 +186,21 @@ writable space on the backing store.
 These overhead numbers are the penalty paid for the additional flexibility of
 being able to reach configurations points that are unachievable without
 SwitchCrypt. We believe SwitchCrypt's design keeps these overheads acceptably
-low in practice (see \secref{usecases}), achieving the desired goal of flexibly
+low in practice (see \secref{sc-usecases}), achieving the desired goal of flexibly
 navigating latency/security tradeoffs for FDE.
 
-\subsection{Revisiting Our Threat Model}\label{subsec:4}
+\subsection{Revisiting Our Threat Model} \label{subsec:4}
 
 The incorporation of cipher switching requires considering each attack in the
 context of each strategy and novel attacks on mixed-cipher nugget states.
-\tblref{security} lists possible attacks and their results. It can be inferred
+\tblref{sc-security} lists possible attacks and their results. It can be inferred
 from these results and SwitchCrypt's design that SwitchCrypt addresses its
 threat model and maintains confidentiality and integrity guarantees. In the case
 of the final attack, we stress that even the least scored cipher is still
-considered secure (\secref{design}).
+considered secure (\secref{sc-design}).
 
 \begin{table}[t]
-  \caption{Attacks on SwitchCrypt and their results}\label{tbl:security}
+  \caption{Attacks on SwitchCrypt and their results} \label{tbl:sc-security}
   \footnotesize
   \centering
   \begin{tabu} to \linewidth { | X[l] | X[c] | X[c] | }

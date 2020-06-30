@@ -1,4 +1,4 @@
-\section{Evaluation}\label{sec:evaluation}
+\section{Evaluation} \label{sec:sb-evaluation}
 
 \subsection{Experimental Setup}
 
@@ -86,19 +86,19 @@ compares Ext4 with dm-crypt to F2FS with StrongBox.
     \textbf{StrongBox vs dm-crypt AES-XTS: F2FS Test}\par\medskip
     \begin{subfigure}{\linewidth}
         \centering
-        {\input{img/microbench-f2fs-sequential.tex}}
-        \caption{Sequential I/O expanded F2FS result set.}\label{fig:microbench-f2fs-sequential}
+        {\input{data/sb/microbench-f2fs-sequential.tex}}
+        \caption{Sequential I/O expanded F2FS result set.} \label{fig:microbench-f2fs-sequential}
     \end{subfigure}\\[1ex]
     \begin{subfigure}{\linewidth}
         \centering
-        {\input{img/microbench-f2fs-random.tex}}
-        \caption{Random I/O expanded F2FS result set.}\label{fig:microbench-f2fs-random}
+        {\input{data/sb/microbench-f2fs-random.tex}}
+        \caption{Random I/O expanded F2FS result set.} \label{fig:microbench-f2fs-random}
     \end{subfigure}
     \caption{Test of the F2FS LFS mounted atop both dm-crypt and
       StrongBox; median latency of different sized whole file read and
       write operations normalized to unencrypted access. By harmonic
       mean, StrongBox is $1.72\times$ faster than dm-crypt for sequential reads
-      and $1.27\times$ faster for sequential writes.}\label{fig:microbench-f2fs}
+      and $1.27\times$ faster for sequential writes.} \label{fig:microbench-f2fs}
 \end{figure}
 
 \subsection{StrongBox Read Performance}
@@ -133,13 +133,13 @@ dm-crypt proved slightly more performant under the NILFS LFS at $1.12\times$
 %     \centering
 %     \begin{subfigure}{0.5\linewidth}
 %         \centering
-%         {\input{img/microbench-gamut-sequential-r.tex}}
+%         {\input{data/sb/microbench-gamut-sequential-r.tex}}
 %         \caption{Sequential reads.}
 %        \label{fig:microbench-gamut-sequential-r}
 %     \end{subfigure}\hspace*{0.5em}%
 %     \begin{subfigure}{0.5\linewidth}
 %         \centering
-%         {\input{img/microbench-gamut-sequential-w.tex}}
+%         {\input{data/sb/microbench-gamut-sequential-w.tex}}
 %         \caption{Sequential writes.}
 %        \label{fig:microbench-gamut-sequential-w}
 %     \end{subfigure}\\[1ex]
@@ -147,13 +147,13 @@ dm-crypt proved slightly more performant under the NILFS LFS at $1.12\times$
 %     \begin{subfigure}{0.5\linewidth}
 %         \vspace{0.5em}
 %         \centering
-%         {\input{img/microbench-gamut-random-r.tex}}
+%         {\input{data/sb/microbench-gamut-random-r.tex}}
 %         \caption{Random reads.}
 %        \label{fig:microbench-gamut-random-r}
 %     \end{subfigure}%
 %     \begin{subfigure}{0.5\linewidth}
 %         \centering
-%         {\input{img/microbench-gamut-random-w.tex}}
+%         {\input{data/sb/microbench-gamut-random-w.tex}}
 %         \caption{Random writes.}
 %        \label{fig:microbench-gamut-random-w}
 %     \end{subfigure}
@@ -170,13 +170,13 @@ dm-crypt proved slightly more performant under the NILFS LFS at $1.12\times$
     \centering
     \begin{subfigure}{0.5\linewidth}
         \centering
-        {\input{img/microbench-gamut-sequential-r.tex}}
+        {\input{data/sb/microbench-gamut-sequential-r.tex}}
         \caption{Sequential reads.}
        \label{fig:microbench-gamut-sequential-r}
     \end{subfigure}\hspace*{0.5em}%
     \begin{subfigure}{0.5\linewidth}
         \centering
-        {\input{img/microbench-gamut-sequential-w.tex}}
+        {\input{data/sb/microbench-gamut-sequential-w.tex}}
         \caption{Sequential writes.}
        \label{fig:microbench-gamut-sequential-w}
     \end{subfigure}\\[1ex]
@@ -184,13 +184,13 @@ dm-crypt proved slightly more performant under the NILFS LFS at $1.12\times$
     \begin{subfigure}{0.5\linewidth}
         \vspace{0.5em}
         \centering
-        {\input{img/microbench-gamut-random-r.tex}}
+        {\input{data/sb/microbench-gamut-random-r.tex}}
         \caption{Random reads.}
        \label{fig:microbench-gamut-random-r}
     \end{subfigure}%
     \begin{subfigure}{0.5\linewidth}
         \centering
-        {\input{img/microbench-gamut-random-w.tex}}
+        {\input{data/sb/microbench-gamut-random-w.tex}}
         \caption{Random writes.}
        \label{fig:microbench-gamut-random-w}
     \end{subfigure}
@@ -231,7 +231,7 @@ filesystems have a metadata overhead that is comparable to that of forward
 writes in an LFS filesystem, Ext4 is not an append-only or append-mostly
 filesystem. This means that, at any time, Ext4 will initiate one or more
 overwrites anywhere on the drive (see \tblref{overwrites}). As described in
-\secref{design}, overwrites once detected trigger the rekeying process, which is
+\secref{sb-design}, overwrites once detected trigger the rekeying process, which is
 a relatively expensive operation. Multiple overwrites compound this expense
 further. This makes Ext4 and other filesystems that do not exhibit at least
 append-mostly behavior unsuitable for use with StrongBox. We include it in our
@@ -260,13 +260,13 @@ filesystem over dm-crypt's AES-XTS can be effectively mitigated.
     \textbf{StrongBox F2FS vs dm-crypt AES-XTS Ext4-OJ}\par\medskip
     \begin{subfigure}{\linewidth}
         \centering
-        {\input{img/microbench-ext4-sequential.tex}}
+        {\input{data/sb/microbench-ext4-sequential.tex}}
         \caption{Sequential I/O F2FS vs Ext4 result set.}
        \label{fig:microbench-ext4-sequential}
     \end{subfigure}\\[1ex]
     \begin{subfigure}{\linewidth}
         \centering
-        {\input{img/microbench-ext4-random.tex}}
+        {\input{data/sb/microbench-ext4-random.tex}}
         \caption{Random I/O F2FS vs Ext4 result set.}
        \label{fig:microbench-ext4-random}
     \end{subfigure}
@@ -305,7 +305,7 @@ can take as long as 15 seconds to mount.
 \begin{figure}[t]
     \textbf{ChaCha20 vs AES: StrongBox F2FS Sequential Test}\par\medskip
     \centering
-    {\input{img/microbench-aes-vs-chacha.tex}}
+    {\input{data/sb/microbench-aes-vs-chacha.tex}}
     \caption{Comparison of AES in XTS and CTR modes versus ChaCha20 in
       StrongBox; median latency of different sized whole file
       sequential read and write operations normalized to ChaCha20
@@ -370,7 +370,7 @@ StrongBox approached maximum capacity.
 \begin{figure}[ht]
     \textbf{Near-Full Drive F2FS Test}\par\medskip
     \centering
-    {\input{img/microbench-f2fs-full.tex}}
+    {\input{data/sb/microbench-f2fs-full.tex}}
     \caption{Comparison of F2FS baseline, atop dm-crypt, and atop
       StrongBox. All configurations are initialized with a near-full
       backing store; median latency of different sized whole file read
@@ -382,12 +382,12 @@ StrongBox approached maximum capacity.
 
 \subsection{Threat Analysis}
 
-\tblref{security} lists possible attacks and their results. It can be inferred
+\tblref{sb-security} lists possible attacks and their results. It can be inferred
 from these results and StrongBox's design that StrongBox addresses its threat
 model and maintains confidentiality and integrity guarantees.
 
 \begin{table}[t]
-  \caption{Attacks on StrongBox and their results}\label{tbl:security}
+  \caption{Attacks on StrongBox and their results} \label{tbl:sb-security}
   \footnotesize
   \centering
   \begin{tabu} to \linewidth { | X[l] | X[c] | X[c] | }

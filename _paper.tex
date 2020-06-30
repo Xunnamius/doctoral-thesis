@@ -1,12 +1,15 @@
 % ---- ETD Document Class and Useful Packages ---- %
 \documentclass{ucetd}
+\usepackage{booktabs}
 \usepackage{amsfonts}
 \usepackage{amsthm}
-
 \usepackage{epsfig, minted}
 %\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\let\Bbbk\relax
+\usepackage{amssymb}
 \usepackage{algorithm}
-\usepackage{amsmath, amssymb}
+\usepackage{algorithmicx}
 \usepackage[noend]{algpseudocode}
 \usepackage{enumitem}      % adjust spacing in enums
 %\usepackage{subfig}
@@ -15,6 +18,11 @@
 \usepackage{multirow}
 \usepackage{rotating}
 \usepackage{wrapfig}
+\usepackage{tabu}
+\usepackage{cleveref}
+\usepackage{array}
+\usepackage{pifont}
+\usepackage[normalem]{ulem}
 
 %% Use these commands to set biographic information for the title page:
 \title{Capitalizing on Security, Performance, and Energy Tradeoffs in Full Drive Encryption Schemes for Fun and Profit}
@@ -25,10 +33,28 @@
 \date{July 2020}
 
 %% Use these commands to set a dedication and epigraph text
-\dedication{Dedication Text}
-\epigraph{Epigraph Text}
+\dedication{To my kiddos (whom at the time of writing do not yet exist): I find
+the courage to peer over the edge of human knowledge and reach down into that
+abyss of the unknown with the hope that you may one day benefit from my
+struggles. I can't wait to meet you!}
+%\epigraph{Epigraph Text}
 
 %% Custom additions
+
+%enumitem settings
+\setlist{
+  listparindent=\parindent,
+  parsep=0pt,
+}
+
+% Fancy subsection references with cref
+\crefformat{section}{\S#2#1#3} % see manual of cleveref, section 8.2.1
+\crefformat{subsection}{\S#2#1#3}
+\crefformat{subsubsection}{\S#2#1#3}
+
+% Flexible table column specifications
+\newcolumntype{C}[1]{>{\centering\arraybackslash}m{#1}}
+
 \usepackage[natbib=true,backend=bibtex,firstinits=true,style=numeric-comp,sorting=nyt,defernumbers,maxnames=99,maxcitenames=99]{biblatex}
 \usepackage{balance}
 \usepackage{adjustbox}
@@ -36,11 +62,11 @@
 \addbibresource{refs.bib}
 
 \usepackage{pgfplots}
-% options for pgfplots
+
 \pgfplotsset{compat=1.8,compat/show suggested version=false}
 \usetikzlibrary{plotmarks}
 \usetikzlibrary{calc}
-%\pgfplotsset{compat=newest}
+
 \pgfplotsset{
    /pgfplots/bar  cycle  list/.style={/pgfplots/cycle  list={%
         {black,fill=black!30!white,mark=none},%
@@ -51,24 +77,124 @@
      }
    },
 }
-% begin of externalization
+
 \usetikzlibrary{external}
 \tikzexternalize[prefix=out/]
 \tikzexternalize
-% don't externalize todonotes
-%\makeatletter
-%\renewcommand{\todo}[2][]{\tikzexternaldisable\@todo[#1]{#2}\tikzexternalenable}
-%\makeatother
-% end of externalization
+
 \usetikzlibrary{patterns}
 \usepgfplotslibrary{groupplots}
 \pgfplotsset{
-every axis label/.append style={font=\small},
-tick label style={font=\small},
+   every axis label/.append style={font=\small},
+   tick label style={font=\small},
 }
 
-\graphicspath{{./figs/}}
-\date{}
+\pgfkeys{
+    /pgf/number format/precision=1,
+    /pgf/number format/fixed zerofill=true,
+}
+
+%% Custom colors that are colorblind safe, print friendly, and photocopy safe
+\definecolor{purpleDark}{RGB}{94, 60, 153}
+\definecolor{purpleLight}{RGB}{178, 171, 210}
+\definecolor{orangeDark}{RGB}{230, 97, 1}
+\definecolor{orangeLight}{RGB}{253, 184, 99}
+
+%% Other custom colors
+\definecolor{gray}{gray}{0.75}
+
+% Ability to filter the values plotted from tables via `discard if not` key
+\pgfplotsset{
+    discard if symbol/.style 2 args={
+        x filter/.append code={
+            \edef\tempa{\thisrow{#1}}
+            \edef\tempb{#2}
+            \ifx\tempa\tempb
+                \def\pgfmathresult{inf}
+            \fi
+        }
+    }
+}
+
+\pgfplotsset{
+    discard if symbol not/.style 2 args={
+        x filter/.append code={
+            \edef\tempa{\thisrow{#1}}
+            \edef\tempb{#2}
+            \ifx\tempa\tempb
+            \else
+                \def\pgfmathresult{inf}
+            \fi
+        }
+    }
+}
+
+\pgfplotsset{
+    discard if number/.style 2 args={
+        x filter/.append code={
+            \ifdim\thisrow{#1} pt=#2pt
+                \def\pgfmathresult{inf}
+            \fi
+        }
+    }
+}
+
+\pgfplotsset{
+    discard if number not/.style 2 args={
+        x filter/.append code={
+            \ifdim\thisrow{#1} pt=#2pt
+            \else
+                \def\pgfmathresult{inf}
+            \fi
+        }
+    }
+}
+
+\pgfplotsset{
+    nodes near coords greater equal only/.style={
+        small value/.style={
+            /tikz/coordinate,
+        },
+        every node near coord/.append style={
+            check for small values/.code={
+                \begingroup
+                \pgfkeys{/pgf/fpu}
+                \pgfmathparse{\pgfplotspointmeta<#1}
+                \global\let\result=\pgfmathresult
+                \endgroup
+                \pgfmathfloatcreate{1}{1.0}{0}
+                \let\ONE=\pgfmathresult
+                \ifx\result\ONE
+                    \pgfkeysalso{/pgfplots/small value}
+                \fi
+            },
+            check for small values
+        },
+    },
+}
+
+\pgfplotsset{
+    nodes near coords greater only/.style={
+        small value/.style={
+            /tikz/coordinate,
+        },
+        every node near coord/.append style={
+            check for small values/.code={
+                \begingroup
+                \pgfkeys{/pgf/fpu}
+                \pgfmathparse{\pgfplotspointmeta<=#1}
+                \global\let\result=\pgfmathresult
+                \endgroup
+                \pgfmathfloatcreate{1}{1.0}{0}
+                \let\ONE=\pgfmathresult
+                \ifx\result\ONE
+                    \pgfkeysalso{/pgfplots/small value}
+                \fi
+            },
+            check for small values
+        },
+    },
+}
 
 \algnewcommand{\LineComment}[1]{\(\triangleright\) #1}
 
@@ -112,6 +238,10 @@ tick label style={font=\small},
 
 \newcommand{\algoref}[1]{Algorithm~\ref{algo:#1}}
 
+\makeatletter
+\newcommand\footnoteref[1]{\protected@xdef\@thefnmark{\ref{#1}}\@footnotemark}
+\makeatother
+
 % Custom hyphenation rules
 
 %\DeclareMathOperator{\minimize}{minimize}
@@ -126,7 +256,8 @@ tick label style={font=\small},
 \newcommand{\floor}[1]{\lfloor #1 \rfloor}
 \newcommand{\st}{s.t.}
 
-\newcommand{\SYSTEM}{StrongBox}
+\newcommand{\StrongBoxURI}{https://github.com/Xunnamius/strongbox-switchcrypt}
+\newcommand{\SwitchCryptURI}{https://github.com/Xunnamius/strongbox-switchcrypt}
 
 % \pdfstringdefDisableCommands{
 %     \def\\{}
@@ -145,10 +276,6 @@ tick label style={font=\small},
 % These lines can be commented out to disable the copyright/dedication/epigraph pages
 \makecopyright
 \makededication
-To my kiddos (who at the time of writing do not yet exist): I peer over the edge
-of human knowledge and reach down into that abyss of the unknown with no other
-motivation than the hope that you may one day benefit. I can't wait to meet you,
-haha!
 % \makeepigraph
 
 %% Make the various tables of contents
@@ -166,81 +293,40 @@ haha!
 \input{2_related}
 
 \chapter{StrongBox: Using Stream Ciphers for High Performance Full Drive Encryption} \label{chp:strongbox}
-\input{3_strongbox/0_abstract}
+\input{3_strongbox/1_motivation}
+\input{3_strongbox/2_related}
+\input{3_strongbox/3_design}
+\input{3_strongbox/4_implementation}
+\input{3_strongbox/5_evaluation}
 
 \chapter{SwitchCrypt: Navigating Tradeoffs in Stream Cipher Based Full Drive Encryption} \label{chp:switchcrypt}
-\input{4_switchcrypt/0_abstract}
+\input{4_switchcrypt/1_motivation}
+\input{4_switchcrypt/2_related}
+\input{4_switchcrypt/3_design}
+\input{4_switchcrypt/4_implementation}
+\input{4_switchcrypt/5_evaluation}
+\input{4_switchcrypt/6_usecases}
 
-\chapter{HASCHK} \label{chp:haschk}
-\input{5_haschk}
+\chapter{HASCHK: Trading Off Build Process Complexity for Resource Security}
+\label{chp:haschk}
+\input{5_haschk/1_motivation}
+\input{5_haschk/2_related}
+\input{5_haschk/3_design}
+\input{5_haschk/4_implementation}
+\input{5_haschk/5_evaluation}
 
 \input{6_conclusion}
 \input{7_availability}
 
 % Format a LaTeX bibliography
 \clearpage
-\printbibliography
+\addcontentsline{toc}{chapter}{Bibliography}
+\begin{singlespace}
+    \printbibliography
+\end{singlespace}
 
 % Figures and tables, if you decide to leave them to the end
 %\input{figure}
 %\input{table}
-
-\end{document}
-
-
-%% Use these commands to set a dedication and epigraph text
-%\dedication{Dedication Text}
-%\epigraph{Epigraph Text}
-
-% Referencing various pieces of the document:
-\newcommand{\figref}[1]{Fig.~\ref{fig:#1}}
-\newcommand{\figsref}[2]{Figures~\ref{fig:#1} and~\ref{fig:#2}}
-\newcommand{\figrref}[2]{Figures~\ref{fig:#1}--\ref{fig:#2}}
-\newcommand{\secref}[1]{Section~\ref{sec:#1}}
-\newcommand{\secsref}[2]{Sections~\ref{sec:#1} and~\ref{sec:#2}}
-\newcommand{\eqnref}[1]{Eqn.~\ref{eqn:#1}}
-\newcommand{\eqnsref}[2]{Equations~\ref{eqn:#1} and~\ref{eqn:#2}}
-\newcommand{\eqnrref}[2]{Equations~\ref{eqn:#1}--\ref{eqn:#2}}
-\newcommand{\insref}[1]{Instruction~\ref{ins:#1}}
-\newcommand{\tblref}[1]{Table~\ref{tbl:#1}}
-\newcommand{\chapref}[1]{Chapter~\ref{chp:#1}}
-\newcommand{\appref}[1]{Appendix~\ref{app:#1}}
-
-\begin{document}
-%% Basic setup commands
-% If you don't want a title page comment out the next line and uncomment the line after it:
-\maketitle
-%\omittitle
-
-% These lines can be commented out to disable the copyright/dedication/epigraph pages
-%\makecopyright
-%\makededication
-%\makeepigraph
-
-%% Make the various tables of contents
-\tableofcontents
-%\listoffigures
-\listoftables
-
-%\acknowledgments
-% Enter Acknowledgements here
-
-\abstract
-\input{0_abstract}
-
-\mainmatter
-% Main body of text follows
-
-\input{1_intro}
-\input{2_related}
-\input{3_strongbox}
-\input{4_availability}
-
-% Figures and tables, if you decide to leave them to the end
-%\input{figure}
-%\input{table}
-
-\clearpage
-\printbibliography
 
 \end{document}

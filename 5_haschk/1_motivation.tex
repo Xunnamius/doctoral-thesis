@@ -1,4 +1,23 @@
-\section{Introduction} \label{sec:introduction}
+\section{Motivation} \label{sec:hc-motivation}
+
+Downloading resources over the internet comes with many risks, including the
+chance that the resource has been corrupted, or that an attacker has replaced
+your desired resource with a compromised version. The de facto standard for
+addressing this risk is the use of \emph{checksums} coupled with a secure
+transport layer; users download a resource, compute its checksum, and compare
+that with an authoritative checksum. Problems with this approach include (1)
+\emph{user apathy}---for most users, calculating and verifying the checksum is
+too tedious; and (2) \emph{co-hosting}---an attacker who compromises a resource
+can trivially compromise a checksum hosted on the same system. The co-hosting
+problem remains despite advancements in tools that automate checksum
+verification and generation. In this paper we propose \emph{HASCHK}, a resource
+verification protocol expanding on de facto checksum-based integrity protections
+to defeat co-hosting while automating the tedious parts of checksum
+verification. We evaluate HASCHK's security, practicality, and ease of
+deployment by implementing a proof-of-concept Google Chrome extension. Our
+implementation is tested versus common resource integrity violations. We find
+our approach is more effective than existing mitigation methods, significantly
+raises the bar for the attacker, and is deployable at scale.
 
 In 2010, through compromising legitimate applications available on trusted
 vendor websites, nation-state actors launched the Havex malware, targeting
@@ -120,12 +139,12 @@ Moreover, such schemes are not compatible with one another and cannot scale to
 secure arbitrary resources on the internet without significant cost and
 implementation/deployment effort.
 
-This paper addresses these problems by proposing \SYSTEM{}, a novel protocol for
+This paper addresses these problems by proposing HASCHK, a novel protocol for
 verifying the integrity of arbitrary resources downloaded over the internet that
 is a complete replacement for typical checksum-based schemes, significantly
 raises the bar for the attacker, and can be implemented in more than just
 browser software. To overcome the challenges posed by user apathy and
-co-hosting, \SYSTEM{} is implemented in two parts: a backend for resource
+co-hosting, HASCHK is implemented in two parts: a backend for resource
 \emph{providers} and a frontend for resource \emph{consumers}---\ie{ (end)
 users}. Providers use a high availability backend to advertise which resources
 they provide for download. To defeat co-hosting, this backend exists separately
@@ -133,29 +152,29 @@ from the system offering those resources. To account for user apathy, the
 frontend client automatically computes a (non-authoritative) checksum
 identifying the resource, queries the backend using that checksum, and mitigates
 the threat to the user in the case where the download is deemed compromised.
-Hence, \SYSTEM{} consists of both the protocol by which these pieces communicate
+Hence, HASCHK consists of both the protocol by which these pieces communicate
 and their implementation.
 
-We approach these problems with four key concerns in mind. (1) \SYSTEM{}
+We approach these problems with four key concerns in mind. (1) HASCHK
 frontends must provide security guarantees transparently without adding any
 extra user burden in the common case. Here, an optimal implementation avoids
 relying on the user to overcome apathy in the interest of security while
 accounting for the tendency of some users to click through security warnings so
 as to not be inconvenienced. The former is achieved through automation and the
-latter through careful design. (2) \SYSTEM{} must be low effort for providers to
+latter through careful design. (2) HASCHK must be low effort for providers to
 integrate and deploy in concert with the resource(s) they are meant to protect.
 There must be no requirement to configure a secondary system solely dedicated to
 hosting checksums. (3) The protocol is not tightly coupled with any particular
 high availability system. (4) Neither application, website source code changes,
 user-facing server, nor web infrastructure modifications are necessary for
-providers to deploy \SYSTEM{}.
+providers to deploy HASCHK.
 
 To demonstrate the general applicability of our protocol, we implement a
 frontend Google Chrome extension and two different high availability backends:
 one based on the public Domain Name System (DNS)~\cite{DNS1, DNS2} via Google
 DNS~\cite{GoogleDNS} and another based on the Ring OpenDHT
 network~\cite{OpenDHT, savoirfairelinux} via a custom Representational State
-Transfer (REST) API. Of course, these \SYSTEM{} components of our implementation
+Transfer (REST) API. Of course, these HASCHK components of our implementation
 should be considered proof-of-concept.
 
 We evaluate the security, performance impact, scalability, and deployment
@@ -173,7 +192,7 @@ arbitrary downloads. Our protocol requires no modifications to web
 standards/infrastructure or source code, does not employ unreliable heuristics,
 does not expect checksums to be co-hosted on the same page as do other automated
 approaches, and can be transparently implemented. Further, our protocol can be
-used by more than just browsers; \SYSTEM{} can protect downloads in FTP clients,
+used by more than just browsers; HASCHK can protect downloads in FTP clients,
 wget/curl clients, and other software.
 
 Second, we present our proof-of-concept implementation, a Google Chrome
@@ -181,11 +200,158 @@ extension, and demonstrate our protocol's effectiveness empirically. We show
 that our implementation is capable of detecting resource compromises when the
 server is under the attacker's control, thus significantly raising the bar for
 an attacker. We additionally make our frontend implementation and OpenDHT JSON
-API available open source (see \secref{availability}).
+API available open source (see \cref{app:availability}).
 
 Third, we evaluate our implementation and find marginal integration and
 deployment overhead with no practical obstacles to scalability or security
 outside those imposed by the Chrome API. To the best of our knowledge, this is
 the first approach that is not susceptible to the pitfalls of co-hosting. Hence,
-we conclude that \SYSTEM{} is more effective at detecting resource integrity
+we conclude that HASCHK is more effective at detecting resource integrity
 attacks than manual checksum verification and prior automated schemes.
+
+\subsection{Resource Integrity SCAs}
+
+Modern software requires a complex globally distributed supply chain and
+development ecosystem for organizations and other providers to design, develop,
+deploy, and maintain products efficiently~\cite{SCA}. Such a globally
+distributed ecosystem necessitates integration with potentially many third party
+entities, be they specialty driver manufacturers, external content distribution
+network (CDN) providers, third party database management software, download
+mirrors, etc.
+
+Critically, reliance on third parties, while often cost-effective and
+feature-rich, also increases the risk of a security compromise at some point in
+the supply chain~\cite{SCA, Stickler}. These types of compromises are known as
+Supply Chain Attacks (SCA). In the context of software development, SCAs are the
+compromise of an entity's software source code via cyber attack, insider threat,
+upstream asset/package management compromise, trusted hardware/vendor
+compromise, or some other attack on one or more phases of the software
+development life cycle or ``supply chain'' to infect an unsuspecting end
+user~\cite{NIST-SCA}.
+
+Every year, major SCAs become more frequent and their fallout more widely
+felt~\cite{SCA, NIST-SCA}. Whether major or minor, SCAs are hard to detect, even
+harder to prevent, and have the goal of infecting and exploiting victims by
+violating the trust between consumer and reputable software vendor.
+
+\begin{table*}[t]
+    \centering
+    \begin{tabular}{|*{10}{c|}}
+      \hline\textbf{Concept}
+          & \textbf{Design} & \textbf{Development} & \textbf{Integration} &
+          \textbf{Deployment} & \textbf{Maintenance} &
+          \textbf{Retirement}\\\hline
+      X&X&X&X&\ding{51}&\ding{51}&\ding{51}\\\hline
+    \end{tabular}
+    \caption{The generic software engineering supply chain.}
+     \label{tbl:attacks}
+\end{table*}
+
+\tblref{attacks} details the phases of a generic software development supply
+chain. For the purposes of this research, we focus exclusively on SCAs targeting
+the deployment, maintenance, and retirement phases.
+
+\subsection{Real World Motivations}
+
+Here, we select four relatively recent real-world attacks we believe most
+effectively articulate the threat posed by resource integrity SCAs and how
+HASCHK might have been used to more effectively mitigate fallout. We examine
+each attack, noting the critical points of failure in their checksum-based
+resource security models. \\
+
+\noindent\textbf{Case 1: PhpMyAdmin.} For an unspecified amount of time circa
+2012, a compromised download mirror in SourceForge's official HTTPS-protected
+CDN was distributing a malicious version of the popular database administration
+software phpMyAdmin~\cite{SCA-PMA3}. The administrator of the mirror in question
+confirmed the attack was due to a vulnerability not shared by SourceForge's
+other mirrors~\cite{SCA-PMA2}.
+
+Attackers mutated the software image, injecting files that would allow any
+attacker aware of their existence to remotely execute arbitrary PHP code on the
+victim's system~\cite{SCA-PMA1}. SourceForge estimates approximately 400 unique
+users downloaded this corrupted version of phpMyAdmin before the mirror was
+disconnected from their CDN, potentially allowing attackers access to the
+private customer data of any number of organizations~\cite{SCA-PMA2}.
+
+While the attackers were able to penetrate a mirror in SourceForge's CDN, the
+official phpMyAdmin website was entirely unaffected; the authoritative checksums
+listed on the site's download page were similarly unaffected~\cite{SCA-PMA2}.
+Hence, a user who was sufficiently motivated, had sufficient technical knowledge
+of checksums and how to calculate them, and was also privy to the location of
+the correct checksum for the official phpMyAdmin image \emph{might} have noticed
+the discrepancy between the two digests. Clearly, a non-trivial number of users
+do not meet these criteria. This attack demonstrates the problem of \emph{user
+apathy}.\\
+
+\noindent\textbf{Case 2: Linux Mint.} In 2016, the Linux Mint team discovered an
+intrusion into their official HTTPS-protected distribution
+server~\cite{SCA-MINT1}. Attackers mutated download links originally pointing to
+the Linux Mint 17.3 Cinnamon edition ISO, redirecting unsuspecting users to a
+separate system hosting a custom Mint ISO compiled with the IRC-based Linux
+backdoor malware \emph{Tsunami}~\cite{SCA-MINT2}. The attack affected hundreds
+of the downloads during that day, with the attackers claiming that a ``few
+hundred'' Linux Mint installs were explicitly under their control. The primary
+motivation behind the intrusion was the construction of a
+botnet~\cite{SCA-MINT3}. The authoritative checksum displayed on the official
+website was also mutated to corroborate the backdoored ISO~\cite{SCA-MINT3},
+illustrating the \emph{co-hosting} problem.
+
+Storing the checksum elsewhere may have prevented mutations on the checksum;
+still, as demonstrated by the first case, such an effort is not itself a
+solution. Hosting a checksum on a secondary system is not very useful if users
+downloading the resource protected by that checksum cannot find it or are not
+actually \emph{checking} it against a manual calculation. \\
+
+\noindent\textbf{Case 3: Havex.} As part of a widespread espionage campaign
+beginning in 2010, Russian Intelligence Services targeted the industrial control
+systems of numerous aviation, national defense, critical infrastructure,
+pharmaceutical, petrochemical, and other companies and organizations with the
+Havex remote access trojan~\cite{SCA-HAVEX1, SCA-HAVEX2}. The attack was carried
+out in phases whereby innocuous software images hosted on disparate
+\emph{legitimate} vendor websites were targeted for replacement with versions
+infected with the Havex malware~\cite{SCA-HAVEX2}. The goal here, as is the case
+with all SCAs, was to infect victims indirectly by having the Havex malware
+bundled into opaque software dependencies, \eg{ a hardware driver or internal
+communication application}.
+
+It is estimated that Havex successfully impacted hundreds or even thousands of
+corporations and organizations---mostly in United States and
+Europe~\cite{SCA-HAVEX2}. The motivation behind the Havex malware was
+intelligence exfiltration and espionage~\cite{SCA-HAVEX1}. How many of these
+vendors employed checksums and other mitigations as part of their software
+release cycle is not well reported, though investigators note said vendors'
+distribution mechanisms were insecure~\cite{SCA-HAVEX2}; however, an automated
+resource verification method could have helped mitigate the delivery of
+compromised software to users. \\
+
+\noindent\textbf{Case 4: HandBrake.} In May of 2017, users of HandBrake, a
+popular open source video transcoder for Mac/OSX, were made aware that they may
+have downloaded and installed a trojan riding atop their transcoding software.
+Attackers breached an HTTPS-protected HandBrake download mirror, replacing the
+legitimate software with a version containing a novel variant of the
+\emph{Proton} malware~\cite{SCA-HB1}. The number of users potentially affected
+is unreported.
+
+The goal of the attack was the exfiltration of victims' sensitive data,
+including decrypted keychains, private keys, browser password databases,
+1Password/Lastpass vaults, decrypted files, and victims' personal videos and
+other media~\cite{SCA-HB1}. The HandBrake developers recommended users perform
+manual checksum verification to determine if their installation media was
+compromised~\cite{SCA-HB2}.
+
+Despite the attackers mutating the HandBrake binary, the authoritative checksums
+listed on the official HandBrake download page were reportedly left
+untouched~\cite{SCA-HB2}. Further, the developers of HandBrake store their
+authoritative checksums both on their official website and in their official
+GitHub repository~\cite{SCA-HB2}. A sufficiently knowledgeable, sufficiently
+motivated user \emph{might} have noticed the discrepancy between their
+calculated checksum and the authoritative checksum listed on the download page.
+
+Suppose, however, that the attackers \textit{had} managed to mutate the
+checksums on the official website. Then there would be a discrepancy between the
+``authoritative'' checksums on the official site and the ``authoritative''
+checksums in the GitHub repository---that is \emph{if} users are even aware that
+a second set of checksums are available at all. Which are the actual
+authoritative checksums? On top of requiring the technical knowledge, a user in
+this confusing situation is then expected to ``do the right thing,'' whatever
+that happens to be in context.

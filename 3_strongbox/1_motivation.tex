@@ -1,0 +1,219 @@
+\section{Motivation} \label{sec:sb-motivation}
+
+Full-drive encryption (FDE) is especially important for mobile devices because
+they contain large quantities of sensitive data yet are easily lost or stolen.
+Unfortunately, the standard approach to FDE---the AES block cipher in XTS
+mode---is 3--5x slower than unencrypted storage. Authenticated encryption based on
+stream ciphers is already used as a faster alternative to AES in other contexts,
+such as HTTPS, but the conventional wisdom is that stream ciphers are unsuitable
+for FDE. Used naively in drive encryption, stream ciphers are vulnerable to
+attacks, and mitigating these attacks with on-drive metadata is generally
+believed to ruin performance.
+
+In this paper, we argue that recent developments in mobile hardware invalidate
+this assumption, making it possible to use fast stream ciphers for FDE. Modern
+mobile devices employ solid-state storage with Flash Translation Layers (FTL),
+which operate similarly to Log-structured File Systems (LFS). They also include
+trusted hardware such as Trusted Execution Environments (TEEs) and secure
+storage areas. Leveraging these two trends, we propose StrongBox, a stream
+cipher-based FDE layer that is a drop-in replacement for dm-crypt, the standard
+Linux FDE module based on AES-XTS. StrongBox introduces a system design and
+on-drive data structures that exploit LFS's lack of overwrites to avoid costly
+rekeying and a counter stored in trusted hardware to protect against attacks. We
+implement StrongBox on an ARM big.LITTLE mobile processor and test its
+performance under multiple popular production LFSes. We find that StrongBox
+improves read performance by as much as $2.36\times$ ($1.72\times$ on average)
+while offering stronger integrity guarantees.
+
+Full-drive encryption (FDE)\footnote{The common term is full-\emph{disk}
+encryption, but this work targets SSDs, so we use \emph{drive}.} is an essential
+technique for protecting the privacy of data at rest. For mobile devices,
+maintaining data privacy is especially important as these devices contain
+sensitive personal and financial data yet are easily lost or stolen. The current
+standard for securing data at rest is to use the AES cipher in XTS
+mode~\cite{XTS, NISTXTS}. Unfortunately, employing AES-XTS increases
+read/write latency by 3--5$\times$ compared to unencrypted storage.
+
+It is well known that authenticated encryption using \emph{stream}
+ciphers---such as ChaCha20~\cite{ChaCha20}---is faster than using AES (see
+\figref{motivation}). Indeed, Google made the case for stream ciphers over AES,
+switching HTTPS connections on Chrome for Android to use a stream cipher for
+better performance~\cite{google-blog}. Stream ciphers are not used for FDE,
+however, for two reasons: (1) confidentiality and (2) performance. First, when
+applied naively to stored data, stream ciphers are trivially vulnerable to
+attacks---including \emph{many-time pad and rollback attacks}---that reveal the
+plaintext by overwriting a secure storage location with the same key. Second, it
+has been assumed that adding the meta-data required to resist these attacks
+would ruin the stream cipher's performance advantage. Thus, the conventional
+wisdom is that FDE necessarily incurs the overhead of AES-XTS or a similar
+primitive.
+
+We argue that two technological shifts in mobile device hardware overturn this
+conventional wisdom, enabling confidential, high-performance storage with stream
+ciphers. First, these devices commonly employ solid-state storage with Flash
+Translation Layers (FTL), which operate similarly to Log-structured File Systems
+(LFS)~\cite{LFS,F2FS,NILFS}. Second, mobile devices now support trusted
+hardware, such as Trusted Execution Environments (TEE)~\cite{TEE,TrustZone} and
+secure storage areas~\cite{eMMC-standard}. FTLs and LFSes are used to limit
+sector/cell overwrites, hence extending the life of the drive. Most writes
+simply appended to a log, reducing the occurrence of overwrites and the chance
+for attacks. The presence of secure hardware means that drive encryption modules
+have access to persistent, monotonically increasing counters that can be used to
+prevent rollback attacks when overwrites do occur.
+
+Given these trends, we propose StrongBox, a new method for securing data at
+rest. StrongBox is a drop-in replacement for AES-XTS-backed FDE such as
+dm-crypt~\cite{dmcrypt}; \ie it requires no interface changes. The primary
+challenge is that even with a FTL or LFS running above an SSD, filesystem blocks
+will occasionally be overwritten; \eg by segment cleaning or \emph{garbage
+collection}. StrongBox overcomes this challenge by using a fast stream cipher
+for confidentiality and performance with integrity preserving Message
+Authentication Codes~\cite{MAC} or ``MAC tags'' and a secure, persistent
+hardware counter to ensure integrity and prevent attacks. \emph{StrongBox's main
+contribution is a system design enabling the first confidential, high-
+performance drive encryption based on a stream cipher.}
+
+We demonstrate StrongBox's effectiveness on a mobile ARM big.LITTLE system---a
+Samsung Exynos Octa 5---running Ubuntu Trusty 14.04 LTS, kernel 3.10.58. We use
+ChaCha20~\cite{ChaCha20} as our stream cipher, Poly1305~\cite{Poly1305} as our
+MAC algorithm, and the eMMC Replay Protected Memory Block partition to store a
+secure counter \cite{eMMC-standard}. As StrongBox requires no change to any
+existing interfaces, we benchmark it on two of the most popular LFSes:
+NILFS~\cite{NILFS} and F2FS~\cite{F2FS}. We compare the performance of these
+LFSes on top of AES-XTS (via dm-crypt) and StrongBox. Additionally, we compare
+the performance of AES-XTS encrypted Ext4 filesystems with StrongBox and F2FS.
+Our results show:
+
+\begin{itemize}
+
+  \item \emph{Improved read performance:} StrongBox provides decreased read
+latencies across all tested filesystems in the majority of benchmarks when
+compared to dm-crypt; \eg under F2FS, StrongBox provides as much as a
+$2.36\times$ ($1.72\times$ average) speedup over AES-XTS\@.
+
+  \item \emph{Equivalent write performance:} despite having to maintain more
+metadata than FDE schemes based on AES-XTS, StrongBox achieves near parity or
+provides an improvement in observed write latencies in the majority of
+benchmarks; \eg under F2FS, StrongBox provides an average $1.27\times$ speedup
+over AES-XTS\@.
+
+\end{itemize}
+
+StrongBox achieves these performance gains while providing a stronger integrity
+guarantee than AES-XTS\@. Whereas XTS mode only hopes to randomize plaintext when
+the ciphertext is altered~\cite{XTS}, StrongBox provides the security of
+standard authenticated encryption. In addition, StrongBox's implementation is
+available open-source.\footnote{\StrongBoxURI}
+
+\subsection{Performance Potential}
+
+We demonstrate the potential performance win from switching to a stream cipher
+by comparing AES-XTS to ChaCha20+ Poly1305. We use an Exynos Octa processor with
+an ARM big.LITTLE architecture---the same processor used in the Samsung Galaxy
+line of phones. We encrypt and then decrypt 250MB of randomly generated bits 3
+times and take the median time for each of encryption and decryption.
+\figref{motivation} shows the distinct advantage of the stream cipher over
+AES---a consistent $2.7\times$ reduction in run time.
+
+\begin{figure}[t]
+  \input{data/sb/heuristics-time.tex}
+\caption{AES-XTS and ChaCha20+Poly1305 Comparison.} \label{fig:motivation}
+\end{figure}
+
+\subsection{Append-mostly Filesystems}
+Of course, stream ciphers are not designed to encrypt data at rest.
+If we naively implement block device encryption with a stream cipher,
+overwriting the same memory location with the same key would trivially
+allow an attacker to recover the secret key. Thus we believe stream
+ciphers are best suited for encrypting block devices backing
+Log-structured File Systems (LFSes), as these filesystems are designed
+to append data to the end of a log rather than overwrite data. In
+practice, some overwrites occur; \eg in metadata, but they are small
+in number during normal execution.
+
+To demonstrate this fact, we write 800MB of random data directly to the backing
+store using four different file systems: Ext4, LogFS, NILFS, and F2FS. We count
+the number of total writes to the underlying block device and the number of
+times data is overwritten for each file system.
+
+
+\begin{table}[th]
+%\begin{wraptable}{r}{4cm}
+\caption{File System Overwrite Behavior} \label{tbl:overwrites}
+\footnotesize
+\centering
+\begin{tabular}{lrr}
+  \textbf{File System} & \textbf{Total Write Ops} & \textbf{Overwrites} \\
+  \hline
+  \hline
+  ext4    &  16,756 & 10,787\\
+  LogFS   &   4,244 &     32\\
+  NILFS   &   4,199 &     24\\
+  F2FS    &   2.107 &      2\\
+  \hline 
+  \hline
+\end{tabular}
+%\vskip -.7em
+%\end{wraptable}
+\end{table}
+
+\tblref{overwrites} shows the data for this experiment. Ext4 has the highest
+number of writes, but many of those are small writes for book-keeping purposes.
+Ext4 also has the largest number of overwrites. Almost 65\% of the writes are to
+a previously written location in the backing store. In contrast, all three
+Log-structured file systems have very few overwrites.
+
+\subsection{Threat Model}
+
+A stream cipher can be more than twice as fast as AES-XTS while providing the
+same confidentiality guarantee. The problem is that a stream cipher is not
+secure if the same key is used to overwrite the same storage location.
+Fortunately, FTLs and LFSes rarely overwrite the same location.
+
+We cannot, however, ignore the fact that overwrites do occur. While
+\tblref{overwrites} shows overwrites are rare during normal operation, we know
+they will occur when garbage collecting the LFS. Thus, we will need some
+metadata to track writes and ensure that data is handled securely if overwrites
+occur. Therefore, we recognize three key challenges to replacing AES with a
+stream cipher for FDE:
+
+\begin{itemize}
+
+\item Tracking writes to the block device to ensure that the same location is
+never overwritten with the same key.
+
+\item Ensuring that the metadata that tracks writes is secure and is not
+subject to leaks or rollback attacks.
+
+\item Accomplishing the above efficiently so that we maintain the  performance
+advantage of the stream cipher.
+
+\end{itemize}
+
+The key to StrongBox is using a secure, persistent counter supported in modern
+mobile hardware; \eg for limiting password attempts. This counter can track
+writes, and thus \emph{versions} of the encrypted data. If an attacker tried to
+\emph{roll back} the file system to overwrite the same location with the same
+key, our StrongBox detects that the local version number is out of sync with the
+global version number stored in the secure counter. In that case, StrongBox
+refuses to initialize and the attack fails. The use of the hardware-supported
+secure counter significantly raises the bar when it comes to rollback attacks,
+requiring a costly and non-discrete physical attack on the hardware itself to be
+effective. The actual structure of the metadata required to track writes and
+maintain integrity is significantly more complicated than simply implementing a
+counter and is the subject of the next section.
+
+An additional challenge is that of crash recovery. StrongBox relies on the
+overlying filesystem to manage data recovery in the event of a crash that leaves
+user data in an inconsistent state. StrongBox handles metadata recovery after a
+crash by giving the root user the option to accept the current metadata state as
+the new consistent state, \ie{``force mounting''}. This allows the root user to
+mount the filesystem and access data after an unexpected shutdown. An attacker
+might try to take advantage of this feature by modifying the backing store,
+forcing an inconsistent state, and hoping the root user will ignore it and force
+mount the system anyway. StrongBox defends against this attack by preventing
+force mounts when metadata state is wildly inconsistent with the global version
+counter. Otherwise, the root user is warned if they attempt a force mount. Thus,
+attacking StrongBox by forcing a crash can only be successful if the attacker
+also has root permission, in which case security is already compromised. Crash
+recovery is also detailed in the next section.

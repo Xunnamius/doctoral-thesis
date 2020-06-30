@@ -1,10 +1,10 @@
-\begin{figure}[t]
- \centering
-  \includegraphics[width=0.8\linewidth]{overview.png}
-   \caption{Overview of the StrongBox construction.}\label{fig:overview}
-\end{figure}
+\section{System Design} \label{sec:sb-design}
 
-\section{StrongBox System Design}\label{sec:design}
+\begin{figure}[t]
+  \centering
+   \includegraphics[width=0.8\linewidth]{figs/sb/overview.png}
+    \caption{Overview of the StrongBox construction.} \label{fig:sb-overview}
+ \end{figure}
 
 StrongBox acts as a translation layer sitting between the drive and the
 operating system. It provides confidentiality and integrity guarantees while
@@ -22,7 +22,7 @@ is where we chose to implement our prototype. StrongBox could even be
 implemented within the SSD drive controller's FTL, which handles scatter gather,
 garbage collection, wear-leveling, etc.
 
-\figref{overview} illustrates StrongBox's design. StrongBox's metadata is
+\figref{sb-overview} illustrates StrongBox's design. StrongBox's metadata is
 encapsulated in four components: an in-memory \emph{Merkle Tree} and two
 drive-backed byte arrays---the \emph{Keycount Store} and the \emph{Transaction
 Journal}---and a persistent monotonic counter we implement with the \emph{Replay
@@ -34,7 +34,7 @@ the LFS. The \emph{Device Controller} handles low-level I/O between
 StrongBox and the backing store.
 
 The rest of this section describes the components referenced in
-\figref{overview}. Specifically: we first describe the backing store and
+\figref{sb-overview}. Specifically: we first describe the backing store and
 StrongBox's layout for data and metadata. This is followed by an exploration of
 the cryptographic driver and how it interacts with that metadata, the role of
 the device controller, an overview of rekeying in the backing store, and further
@@ -44,12 +44,12 @@ attacks.
 \subsection{Backing Store Function and Layout}
 
 The backing store is the storage media on which StrongBox operates.
-\figref{backstore} illustrates StrongBox's layout on this store.
+\figref{sb-backstore} illustrates StrongBox's layout on this store.
 
 \begin{figure}[t]
  \centering
-  \includegraphics[width=0.8\linewidth]{backstore.png}
-   \caption{Layout of StrongBox's backing storage.}\label{fig:backstore}
+  \includegraphics[width=0.8\linewidth]{figs/sb/backstore.png}
+   \caption{Layout of StrongBox's backing storage.} \label{fig:sb-backstore}
 \end{figure}
 
 In the \textit{body} section of the backing store layout, end-user data is
@@ -57,7 +57,7 @@ partitioned into a series of same-size \emph{logical blocks}. These are distinct
 from the concept of \emph{physical drive blocks}, which are collections of one
 or more drive sectors. To make this distinction clear, we refer to these wider
 logical blocks as \emph{nuggets}, marked \textit{NUG} in the Body section of
-\figref{backstore}. Hence, a nugget consists of one or more physical drive
+\figref{sb-backstore}. Hence, a nugget consists of one or more physical drive
 blocks, depending on its configured size. Each nugget is subdivided into a
 constant number of sub-blocks we refer to as \emph{flakes}.
 
@@ -144,7 +144,7 @@ The rekeying journal is where nuggets and their associated metadata are
 transiently written, enabling StrongBox to resume rekeying in the event that it
 is interrupted during the rekeying procedure.
 
-\subsection{Metadata-aware Cryptographic Driver}
+\subsubsection{Metadata-aware Cryptographic Driver}
 
 The cryptographic driver coordinates StrongBox's disparate components.
 Its primary function is to map incoming reads and writes to their
@@ -178,7 +178,7 @@ details StrongBox's write operation.
 
 \begin{algorithm}[t]
 %\floatname{algorithm}{Algorithm}
-\caption{StrongBox handling an incoming read request.}\label{algo:read}
+\caption{StrongBox handling an incoming read request.} \label{algo:read}
 {\footnotesize 
 \begin{algorithmic}[1]
 \Require The read request is over a contiguous segment of the backing
@@ -215,7 +215,7 @@ store
 
 \begin{algorithm}[t]
 %\floatname{algorithm}
-\caption{StrongBox handling an incoming write request.}\label{algo:write}
+\caption{StrongBox handling an incoming write request.} \label{algo:write}
 {\footnotesize 
 \begin{algorithmic}[1]
 \Require The write request is to a contiguous segment of the backing store
@@ -267,7 +267,7 @@ store
 An overwrite breaks the security guarantee offered by any stream
 cipher. To prevent this failure, StrongBox tracks incoming write
 requests to prevent overwrites. This tracking is done with the
-transaction journal, featured in \figref{overview}.
+transaction journal, featured in \figref{sb-overview}.
 
 % Describe how this component meets that need
 The transaction journal consists of $N$ $\ceil{P / 8}$-byte bit
@@ -287,7 +287,7 @@ the operation does not constitute an overwrite. If the operation
 \textit{does} constitute an overwrite, StrongBox triggers a rekeying
 procedure for the entire nugget before safely completing the request.
 
-\subsubsection{Merkle Tree}\label{sec:merkle}
+\subsubsection{Merkle Tree} \label{sec:merkle}
 
 Tracking writes with the transaction journal may stymie a passive
 attacker by preventing explicit overwrites, but a sufficiently
@@ -322,12 +322,12 @@ mismatch for any particular flake}, the latter immediately and obviously fails.
 
 To prevent a many-time pad attack, each nugget is assigned its own
 form of nonce we refer to as a \emph{keycount}. The keycount store in
-\figref{overview} represents a byte-array containing $N$ 8-byte
+\figref{sb-overview} represents a byte-array containing $N$ 8-byte
 integer keycounts indexed to each nugget. Along with acting as the
 per-nugget nonce consumed by the stream cipher, the keycount is used
 to derive the per-flake unique subkeys used in MAC tag generation.
 
-\subsubsection{Rekeying Procedure}
+\subsection{Rekeying Procedure}
 
 When a write request would constitute an overwrite, StrongBox will
 trigger a rekeying process instead of executing the write normally.
@@ -342,7 +342,7 @@ outdated nugget data. See: \algoref{rekeying}.
 
 \begin{algorithm}[t]
 %\floatname{algorithm}
-\caption{StrongBox rekeying process.}\label{algo:rekeying}
+\caption{StrongBox rekeying process.} \label{algo:rekeying}
 {\footnotesize 
 \begin{algorithmic}[1]
 \Require The original write applied to a contiguous backing store segment
