@@ -17,9 +17,9 @@ invariants that might shift over time.
 
 Full drive encryption is especially important for mobile devices because they
 contain large quantities of sensitive data yet are easily lost or stolen. As
-this research demonstrates, the standard approach to FDE—the AES block cipher in
-XTS mode—is 3-5x slower than unencrypted storage. Authenticated encryption based
-on stream ciphers is already used as a faster alternative to AES in other
+this research demonstrates, the standard approach to FDE---the AES block cipher
+in XTS mode---is 3-5x slower than unencrypted storage. Authenticated encryption
+based on stream ciphers is already used as a faster alternative to AES in other
 contexts, such as HTTPS, but the conventional wisdom is that stream ciphers are
 unsuitable for FDE. Used naively in drive encryption, stream ciphers are
 vulnerable to attacks, and mitigating these attacks with on-drive metadata is
