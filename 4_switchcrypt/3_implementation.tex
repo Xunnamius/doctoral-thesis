@@ -40,7 +40,8 @@ read from and written to nuggets in specific regions).
 Further, to operate securely, SwitchCrypt must be seeded with random data
 initially rather than have the backing store consist of all zeroes. This is a
 one-time cost paid during initialization and has no tangible effect on
-performance. SSDs that support ISE can accomplish this with minimal wear.
+performance. SSDs that support TRIM or similar quick secure deletion operations
+can accomplish this with minimal wear.
 
 Finally, as the Freestyle cipher is highly configurable, we implement it in
 three different configurations: a ``fast'' mode with parameters

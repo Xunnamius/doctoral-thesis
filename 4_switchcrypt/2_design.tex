@@ -317,10 +317,11 @@ will always be in a consistent state and always share the same data. The active
 configuration determines \emph{where} a read operation should occur. In this
 way, the Mirrored strategy represents a form of spatial cipher switching because
 we are switching which configuration we are using to read in data. A user could
-take advantage of this along with SSD Instant Secure Erase~\cite{ISE1,ISE2,ISE3}
-to delete other regions, thus quickly and securely converging the drive to a
-single configuration without losing any data or suffering the egregious
-performance or battery penalty that comes with re-ciphering every nugget.
+take advantage of this along with SSD TRIM or deletion operations provided by
+the filesystem to delete other regions, thus quickly and securely converging the
+drive to a single configuration without losing any data or suffering the
+egregious performance or battery penalty that comes with re-ciphering every
+nugget.
 
 \subsubsection{Comparing Cipher Switching Strategies}
 
@@ -347,15 +348,13 @@ three cipher switching strategies.
 
 \textbf{Convergence.} Depending on the use case, the ability to quickly converge
 the entire drive to a single cipher configuration without losing data is very
-useful (see: \secref{sc-usecases}). The near-instantaneous ``just forget the key''
-nature of SSD Instant Secure Erase (ISE) implementations on modern
-SSDs~\cite{ISE1,ISE2,ISE3} makes this a very fast process for the Mirrored
-strategy. The Forward strategy is slow to converge compared to Mirrored since,
-in the worse case, every nugget on the drive will require re-ciphering. The
-Selective strategy is similarly slow to converge since entire regions of nuggets
-must be moved and re-ciphered to prevent data loss; those regions could be
-destroyed without moving data around using ISE too, which would be very fast,
-but unlike Mirrored some data would be lost forever.
+useful (see: \secref{sc-usecases}). The Forward strategy is slow to converge
+compared to Mirrored since, in the worse case, every nugget on the drive will
+require re-ciphering. The Selective strategy is similarly slow to converge since
+entire regions of nuggets must be moved and re-ciphered to prevent data loss;
+those regions could be destroyed without moving data around using TRIM or
+similar SSD functionality too, which would be very fast, but unlike Mirrored
+some data would be lost forever.
 
 \textbf{Waste.} Unlike the other two strategies, using the Forward strategy does
 not reduce the total usable space on the drive by the end-user, ciphertext
