@@ -46,12 +46,12 @@
         % clip=false, % allow clip to protrude beyond ymax
         % Custom stuff to edit per template
         %
-        xlabel={\footnotesize Security Score},
+        xlabel={\footnotesize R+R (norm)},
         xlabel near ticks,
         %xlabel shift={-1.5mm},
         xmin=0, xmax=4,
         xtick={ 0, 1, 2, 3, 4 },
-        xticklabels={ 0,,, 3, \empty },
+        xticklabels={ 0,,, 1, \empty },
         %major x tick style=transparent,
         %enlarge x limits=0.2, % add some breathing room along the x axis's sides
         %
@@ -68,15 +68,23 @@
         % extra y tick label={\empty},
         %bar width=4.5pt, % change size of bars
         %
-        legend cell align=center,
+        legend cell align=left,
         legend style={ column sep=1ex },
         legend entries={
-            {\scriptsize Baseline I/O},
-            {\scriptsize SwitchCrypt Ratio Configuration I/O}
+            {\scriptsize Baseline},
+            {\scriptsize Ratios},
+            {\scriptsize },
+            {\scriptsize },
+            {\scriptsize },
+            {\scriptsize C8},
+            {\scriptsize C20},
+            {\scriptsize FF},
+            {\scriptsize FB},
+            {\scriptsize FS}
         },
         legend style={
             draw=none,
-            legend columns=4,
+            legend columns=5,
             at={(1.0,1.35)},
             anchor=south,
         },
@@ -84,6 +92,14 @@
         \nextgroupplot[title={Sequential 40M Reads}]
             \addlegendimage{no markers,red}
             \addlegendimage{mark=otimes*,only marks,black}
+            \addlegendimage{only marks,mark=square*,white}
+            \addlegendimage{only marks,mark=square*,white}
+            \addlegendimage{only marks,mark=square*,white}
+            \addlegendimage{only marks,mark=square*,red}
+            \addlegendimage{only marks,mark=triangle*,red}
+            \addlegendimage{only marks,mark=diamond*,red}
+            \addlegendimage{only marks,mark=pentagon*,red}
+            \addlegendimage{only marks,mark=otimes,red}
             \addplot [thick, red] table [
                 meta=cipher,
                 x=score,

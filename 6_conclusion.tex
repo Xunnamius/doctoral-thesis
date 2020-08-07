@@ -1,10 +1,8 @@
 \chapter{Conclusion} \label{chp:conclusion}
 
-\TODO{Merge these.}
-
 The conventional wisdom is that securing data at rest requires one must pay the
-high performance overhead of encryption with AES is XTS mode. This paper shows
-that technological trends overturn this conventional wisdom: Log-structured file
+high performance overhead of encryption with AES is XTS mode. This work shows
+that technological trends overturn this conventional wisdom: log-structured file
 systems and hardware support for secure counters make it practical to use a
 stream cipher to secure data at rest. We demonstrate this practicality through
 our implementation of StrongBox which uses the ChaCha20 stream cipher and the
@@ -21,51 +19,53 @@ it or compare to it.\footnote{\StrongBoxURI} Our hope is that this work
 motivates further exploration of fast stream ciphers as replacements for AES-XTS
 for securing data at rest.
 
+Further, this work advocates for a more flexible approach to FDE where the
+storage system can dynamically adjust the tradeoffs between security and
+latency/energy. To support this vision of agile encryption, we proposed an
+interface that allows multiple stream ciphers with different input and output
+characteristics to be composed in a generic manner. We have identified three
+strategies for using this interface to switch ciphers dynamically and with low
+overhead. We have also proposed a quantification framework for determining when
+to use one cipher over another. Our case studies show how different strategies
+can be used to optimize for different goals in practice. We believe that agile
+encryption will become increasingly important as successful systems are
+increasingly required to balance conflicting operational requirements. We hope
+that this work inspires further research in achieving this balance. Our work is
+publicly available open-source\footnoteref{note1}.
 
+When it comes to data in motion---specifically, downloading arbitrary resources
+over the internet---it is indeed a risky endeavor. Resource integrity and other
+Supply Chain Attacks are becoming more frequent and their impact more widely
+felt. In this work, we showed that the de facto standard for protecting the
+integrity of arbitrary resources on the internet---the use of
+\emph{checksums}---is insufficient and often ineffective. We presented HASCHK, a
+practical resource verification protocol that automates the tedious parts of
+checksum verification while leveraging pre-existing high availability systems to
+ensure resources and their checksums are not vulnerable to co-hosting. Further,
+we demonstrated the effectiveness and practicality of our approach versus
+real-world resource integrity attacks in a production application.
 
-
-
-This paper advocates for a more agile approach to FDE where the storage system
-can dynamically alter the tradeoffs between security and latency/energy. To
-support this vision of agile encryption, we have proposed an interface that
-allows multiple stream ciphers with different input and output characteristics
-to be composed in a generic manner. We have identified three strategies for
-using this interface to switch ciphers dynamically, but with low overhead. We
-have also proposed a scoring method for determining when to use one cipher over
-another. Our case studies show how different strategies can be used to achieve
-different goals in practice. We believe that agile encryption will become
-increasingly important as successful systems are increasingly required to
-balance conflicting operational requirements. We hope that this work inspires
-further research into achieving this balance. It is publicly available
-open-source\footnoteref{note1}.
-
-
-
-
-
-Downloading resources over the internet is indeed a risky endeavor. Resource
-integrity and other Supply Chain Attacks are becoming more frequent and their
-impact more widely felt. In this work, we showed that the de facto standard for
-protecting the integrity of arbitrary resources on the internet---the use of
-\emph{checksums}---is insufficient and often ineffective. We presented
-HASCHK, a practical resource verification protocol that automates the tedious
-parts of checksum verification while leveraging pre-existing high availability
-systems to ensure resources and their checksums are not vulnerable to
-co-hosting. Further, we demonstrated the effectiveness and practicality of our
-approach versus real-world resource integrity attacks in a production
-application.
-
-The results of our evaluation show that our approach is more effective than
-checksums and prior work mitigating integrity attacks for arbitrary resources on
-the internet. Further, we show HASCHK is capable of guarding against a
-variety of attacks, is deployable at scale for providers that already maintain a
-DNS presence, and can be deployed without fear of adversely affecting the user
-experience of clients that are not HASCHK-aware.
-
-Though not a panacea, we believe our protocol significantly raises the bar for
-the attacker. We intend to continue developing our extension and we make it
-available to a wide audience (see \cref{app:availability}).
+The results of our final evaluation show that our approach is more effective
+than checksums and prior work mitigating integrity attacks for arbitrary
+resources on the internet. Further, we show HASCHK is capable of guarding
+against a variety of attacks, is deployable at scale for providers that already
+maintain a DNS presence, and can be deployed without fear of adversely affecting
+the user experience of clients that are not HASCHK-aware. Though not a panacea,
+we believe our protocol significantly raises the bar for the attacker. We intend
+to continue developing our extension and we make it available to a wide audience
+(see \cref{app:availability}).
 
 \section{Future Work}
 
-\TODO{Multithreaded SwitchCrypt explanation goes here.}
+As it stands now, our StrongBox and SwitchCrypt implementations are single
+threaded. The cryptographic systems we compared to StrongBox and SwitchCrypt and
+all multi-threaded, perhaps making our performance wins more significant. What
+performance gains (i.e. more slack) might be available if we parallelize
+portions of StrongBox and SwitchCrypt source? Examples include: 1) given that
+nuggets are all independent agents, new switching strategies might be developed
+that leverage any speedups in parallelizing the encryption and decryption
+processes and 2) garbage collection and cipher switching can happen in
+background worker threads and could even leverage a scheduler and 3) StrongBox
+and SwitchCrypt could be integrated into F2FS directly, sharing its
+threading/scheduling model in a production implementation; currently, StrongBox
+and SwitchCrypt are implemented on top of the BUSE emulation device.

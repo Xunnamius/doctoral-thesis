@@ -1,47 +1,27 @@
 \section{Motivation} \label{sec:sc-motivation}
 
-Recent work on Full Drive Encryption shows that stream ciphers achieve
-significantly improved performance over block ciphers while offering stronger
-security guarantees. However, optimizing for performance often conflicts with
-other key concerns like energy usage and desired security properties. In this
-paper we present SwitchCrypt, a software mechanism that navigates the tradeoff
-space made by balancing competing security and latency requirements via
-\emph{cipher switching} in space or time. Our key insight in achieving
-low-overhead switching is to leverage the overwrite-averse, append-mostly
-behavior of underlying solid-state storage to trade throughput for reduced
-energy use and/or certain security properties. We implement SwitchCrypt on an
-ARM big.LITTLE mobile processor and test its performance under the popular F2FS
-LFS. We provide empirical results demonstrating the conditions under which
-different switching strategies are optimal through the exploration of four cases
-studies. In one study, where we require the filesystem to react to a shrinking
-energy budget by switching ciphers, we find that SwitchCrypt achieves up to a
-3.3x total energy use reduction compared to a static approach using only the
-Freestyle stream cipher. In another case, where we allow the user to manually
-switch between ChaCha20 and Freestyle stream ciphers dynamically, we achieve a
-1.6x to 4.8x reduction in I/O latency compared to prior static approaches.
-
 The state of the art for securing data at rest, such as the contents of a
 laptop's SSD, is Full Drive Encryption (FDE). Traditional FDE employs a single
 cryptographic cipher to encrypt, decrypt, and authenticate drive contents on the
-fly. Unfortunately, encryption introduces overhead which can drastically impact
+fly. Unfortunately, encryption introduces overhead that drastically impacts
 system performance and total energy consumption. Hence, modern storage systems
 must carefully balance these competing concerns. On the one hand, stronger
 security guarantees come with increased latency and threaten to balloon energy
 consumption. On the other, capping total energy consumption requires tolerating
 increased latency or weaker security guarantees.
 
-FDE implementations such as dm-crypt for Linux and BitLocker for Windows balance
-these concerns with respect to some generic ``common case'' workload, but
-this approach often fails to deliver an optimal outcome for specific workloads.
-Google's Android OS is a good example of this. Android supported FDE with the
-release of Android 3.0, yet it was not enabled by default until Android
-6.0~\cite{android-M-mobile-motivation}. Two years prior, Google attempted to
-roll out FDE by default on Android 5.0 but had to backtrack. In a statement to
-Engadget, Google blamed ``'performance issues on some partner devices' ... for
-the backtracking''~\cite{google-engadget}. At the same time, AnandTech reported
-a ``62.9\% drop in random read performance, a 50.5\% drop in random write
-performance, and a staggering 80.7\% drop in sequential read performance''
-versus Android 5.0 unencrypted storage for various
+FDE implementations such as dm-crypt~\cite{dmcrypt,DmC-Android} for Linux and
+BitLocker for Windows balance these concerns with respect to some generic
+``common case'' workload, but this approach often fails to deliver an optimal
+outcome for specific workloads. Google's Android OS is a good example. Android
+supported FDE with the release of Android 3.0, yet it was not enabled by default
+until Android 6.0~\cite{android-M-mobile-motivation}. Two years prior, Google
+attempted to roll out FDE by default on Android 5.0 but had to backtrack. In a
+statement to Engadget, Google blamed ``'performance issues on some partner
+devices' ... for the backtracking''~\cite{google-engadget}. At the same time,
+AnandTech reported a ``62.9\% drop in random read performance, a 50.5\% drop in
+random write performance, and a staggering 80.7\% drop in sequential read
+performance'' versus Android 5.0 unencrypted storage for various
 workloads~\cite{android-M-mobile-motivation-2}.
 
 FDE's impact on drive performance and energy efficiency depends on a multitude
@@ -54,27 +34,27 @@ use, 3) more useful security guarantees, and 4) the ability to encrypt devices
 that would otherwise be too slow or energy-inefficient to support FDE.
 
 However, the standard cipher choice for FDE is the slow AES \emph{block cipher}
-(AES-XTS)~\cite{XTS, XTSComments, NISTXTS}. Dickens et al. introduced a method
-for using ciphers other than AES-XTS for FDE; specifically, the high performance
-ChaCha20 \emph{stream cipher}~\cite{StrongBox, ChaCha20}. More recent
-work---such as Google's HBSH (hash, block cipher, stream cipher, hash) and
-Adiantum---brings stream cipher based FDE to devices that do not or cannot
-support hardware accelerated AES~\cite{Adiantum}. Hence, it has been
-demonstrated that using stream ciphers for FDE is not only feasible at industry
-scale but is desirable in a variety of contexts.
+(AES-XTS)~\cite{XTS, XTSComments, NISTXTS}. With StrongBox, we introduced a
+method for using ciphers other than AES-XTS for FDE; specifically, the high
+performance ChaCha20 \emph{stream cipher}~\cite{StrongBox, ChaCha20}. More
+recent work---such as Google's HBSH (hash, block cipher, stream cipher, hash)
+and Adiantum~\cite{Adiantum}---brings stream cipher based FDE to devices that do
+not or cannot support hardware accelerated AES. Hence, it has been demonstrated
+that using stream ciphers for FDE is both desirable in a variety of contexts and
+feasible at industry scale.
 
-In this paper, we explore the rich configuration space of stream ciphers beyond
-the narrow scope of previous work. Each cipher comes with a variety of
+With this research, we explore the rich configuration space of stream ciphers
+beyond the narrow scope of previous work. Each cipher comes with a variety of
 performance, energy efficiency, and security properties in the FDE context.
-These ciphers include ChaCha variants with different round counts (e.g., ChaCha8
-and ChaCha12), ciphers with stronger security guarantees versus more robust
-adversaries (e.g., Freestyle), and other ciphers like SalsaX, AES in counter
-mode (AES-CTR), Rabbit, Sosemanuk, etc~\cite{Freestyle, SalsaX, Rabbit,
-Sosemanuk, ChaCha20, AESCTR}. Given this space, the cipher configuration
-providing the least latency overhead is almost always different than the
-configuration providing the most desirable security properties, and both may
-differ from the configuration using the least energy or preserving the most free
-space on the encrypted drive.
+These ciphers include ChaCha variants with different round counts (e.g.,
+ChaCha8 and ChaCha12)~\cite{ChaCha20}, ciphers with stronger security
+guarantees versus more robust adversaries (e.g., Freestyle~\cite{Freestyle}),
+and other ciphers like SalsaX~\cite{SalsaX}, AES in counter mode
+(AES-CTR)~\cite{AESCTR}, Rabbit~\cite{Rabbit}, Sosemanuk~\cite{Sosemanuk}, etc.
+Given this variety, the cipher configuration providing the least latency
+overhead is almost always different than the configuration providing the most
+desirable security properties, and both may differ from the configuration using
+the least energy or preserving the most free space on the encrypted drive.
 
 Further, while cipher choice might be configured statically at compile or boot
 time with respect to some common case in traditional FDE, such configurations
@@ -88,20 +68,25 @@ a system could dynamically transition into a more desirable configuration given
 runtime changes?\\
 \\
 \textbf{Our Contributions}\\
-To realize the goal of dynamically adjusting storage tradeoffs at runtime, we
-first define a scheme to \emph{quantify} the usefulness of each cipher based on
-key security properties relevant to FDE in context. Using this scheme, we define
-a tradeoff space of cipher configurations over competing concerns: total energy
-use, desirable security properties, read and write performance (latency), total
-writable space on the drive, and how quickly the contents of the drive can
-converge to a single encryption configuration. We then introduce a novel design
-substantively expanding prior FDE work by wholly \emph{decoupling} cipher
-implementations from the encryption process. Finally, we develop the idea of
-cipher switching using \emph{switching strategies} to ``re-cipher'' storage
-units dynamically, allowing us to tradeoff different performance and security
-properties of various configurations at runtime.
+To realize the goal of dynamically adjusting storage tradeoffs at runtime, we:
 
-Unifying these contributions, we present SwitchCrypt, a software mechanism that
+\begin{itemize}
+  \item Define a scheme to \emph{quantify} the usefulness of each cipher based
+  on key security properties relevant to FDE in context. Using this scheme, we
+  define a tradeoff space of cipher configurations over competing concerns:
+  total energy use, desirable security properties, read and write performance
+  (latency), total writable space on the drive, and how quickly the contents of
+  the drive can converge to a single encryption configuration.
+
+  \item Introduce a novel design substantively expanding prior FDE work by
+  wholly \emph{decoupling} cipher implementations from the encryption process.
+
+  \item Develop the idea of cipher switching using \emph{switching strategies}
+  to ``re-cipher'' storage units dynamically, allowing us to tradeoff different
+  performance and security properties of various configurations at runtime.
+\end{itemize}
+
+Unifying these contributions, we present SwitchCrypt: a software system that
 navigates the tradeoff space made by balancing competing security and latency
 requirements via cipher switching in space and time. We implement SwitchCrypt
 and three switching strategies---\emph{Forward}, \emph{Selective}, and
@@ -136,15 +121,16 @@ devices~\cite{google-engadget, android-M-mobile-motivation,
 android-M-mobile-motivation-2}. To keep our drive encrypted at all times with
 AES-XTS means we must accept this hit to performance and battery life. Worse, if
 our device does not support hardware accelerated AES, performance can be
-degraded even further; I/O latency can be as high as 3-5x~\cite{StrongBox}.
+degraded even further; I/O latency can be as high as 3--5x~\cite{StrongBox}.
 Hardware accelerated AES is hardly ubiquitous, and the existence of myriad
 devices that do not support it cannot simply be ignored, hence Google's
-investment in Adiantum~\cite{Adiantum}.
+investment in Adiantum---an FDE solution for ``the next billion users'' of
+low-cost devices without support for hardware accelerated AES~\cite{Adiantum}.
 
-Second, AES-XTS was designed to mitigate threats to drive data ``at rest,''
-which assumes an attacker cannot access snapshots of our encrypted data nor
-manipulate our data without those manipulations being immediately obvious to us.
-With access to multiple snapshots of a drive's AES-XTS-encrypted contents, an
+Second, AES-XTS is designed to mitigate threats to drive data ``at rest,'' which
+assumes an attacker cannot access snapshots of our encrypted data nor manipulate
+our data without those manipulations being immediately obvious to us. With
+access to multiple snapshots of a drive's AES-XTS-encrypted contents, an
 attacker can passively glean information about the plaintext over time by
 contrasting those snapshots, leading to confidentiality violations in some
 situations~\cite{XEX, XTS}. Similarly, an attacker that can manipulate encrypted
@@ -158,8 +144,9 @@ backups occur at a layer above the drive controller, meaning any encryption
 happening at the FTL or below is irrelevant.
 
 Third, our system is battery constrained, placing a cap on our energy budget
-that can change at any moment. Our system should respond to these changing
-requirements without violating any other concerns.
+that can change at any moment as we transition from line power to battery power
+and back. Our system should respond to these changing requirements without
+violating any other concerns.
 
 To alleviate the performance concern, we can choose a stream cipher like
 ChaCha20 rather than the AES-XTS block cipher. Using StrongBox, an encryption
@@ -184,7 +171,7 @@ to certain drive regions. However, with ciphertext randomization, a cipher will
 output a different ``random'' ciphertext even when given the same key, nonce,
 and plaintext; this means, even after a forced rollback of system state and/or
 legitimate restoration from a backup, comparing future writes is no longer
-confidentiality violating because each snapshot will always consist of different
+violates confidentiality because each snapshot will always consist of different
 ciphertext regardless of the plaintext being encrypted or the state of the
 drive. Using Freestyle~\cite{Freestyle}, a ChaCha20-based stream cipher that
 supports ciphertext randomization, we can guarantee data confidentiality in this
@@ -209,17 +196,17 @@ configuration when conserving energy is a top priority, and then switch back to
 the Freestyle configuration when we connect to a charger and backups are
 eventually resumed.
 
-In this paper we present SwitchCrypt, a device mapper that can trade off between
-these two configurations and others without compromising security or performance
-or requiring the device be restarted. With prior work, the user must select a
-static operating point in the energy-security-latency space at initialization
-time and hope it is optimal across all workloads and cases. If they choose the
-Freestyle configuration, their device will be slower and battery hungry even
-when they are not backing up. If they choose the more performant ChaCha20
-configuration, they risk confidentiality-violating snapshot comparison attacks.
-SwitchCrypt solves this problem by encrypting data with the high performance
-ChaCha20 when the battery is low and switching to Freestyle when plugged in and
-syncing with the backup service resumes.
+In this dissertation we present SwitchCrypt, a device mapper that can trade off
+between these two configurations and others without compromising security or
+performance or requiring the device be restarted. With prior work, the user must
+select a static operating point in the energy-security-latency space at
+initialization time and hope it is optimal across all workloads and cases. If
+they choose the Freestyle configuration, their device will be slower and battery
+hungry even when they are not backing up. If they choose the more performant
+ChaCha20 configuration, they risk confidentiality-violating snapshot comparison
+attacks. SwitchCrypt solves this problem by encrypting data with the high
+performance ChaCha20 when the battery is low and switching to Freestyle when
+plugged in and syncing with the backup service resumes.
 
 \subsection{Key Challenges}
 
@@ -262,5 +249,5 @@ These strategies leverage our generic cipher interface and flexible drive layout
 to selectively ``re-cipher'' groups of nuggets, whereby the key and the cipher
 used to encrypt/decrypt a nugget are switched at runtime. These strategies allow
 SwitchCrypt to move from one configuration point to another or even settle on
-optimal configurations wholly unachievable with prior work. The challenge
-here is to accomplish this while minimizing overhead.
+optimal configurations wholly unachievable with prior work. The challenge here
+is to accomplish this while minimizing overhead.

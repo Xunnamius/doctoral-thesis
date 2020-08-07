@@ -90,8 +90,8 @@ or \texttt{example1.com}. \\
 
 Example 2: a browser frontend (\eg{ Lynx, Google Chrome, Internet Explorer, et
 cetera}) downloading a resource at \texttt{https://s4.l.cdn.example2.com/fl}
-from a hyperlink on the page \texttt{https://dl.app.example3.com/index/page} has
-a host subcomponent of \texttt{dl.app.example3.com} (\emph{not
+from a hyperlink on the page \\\texttt{https://dl.app.example3.com/index/page} has
+a host subcomponent of \\\texttt{dl.app.example3.com} (\emph{not
 \texttt{s4.ll.cdn.example2.com}}) and a BD of \texttt{app.example3.com} or
 \texttt{example3.com}. \\
 
@@ -101,7 +101,7 @@ the browser frontend in example 2 (above), the BD is not derived from the
 resource's URI directly but from the URI of the HTML page containing the
 hyperlink pointing to that resource. This prevents an adversary from trivially
 fooling HASCHK by, for instance, replacing
-\texttt{https://s4.l.cdn.example2.com} with a hyperlink pointing to
+\\\texttt{https://s4.l.cdn.example2.com} with a hyperlink pointing to
 \texttt{https://attacker.com} and hosting a conforming HASCHK backend that
 would cause the frontend to respond with a false negative.
 

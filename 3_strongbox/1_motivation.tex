@@ -1,30 +1,5 @@
 \section{Motivation} \label{sec:sb-motivation}
 
-Full drive encryption (FDE) is especially important for mobile devices because
-they contain large quantities of sensitive data yet are easily lost or stolen.
-Unfortunately, the standard approach to FDE---the AES block cipher in XTS
-mode---is 3--5x slower than unencrypted storage. Authenticated encryption based on
-stream ciphers is already used as a faster alternative to AES in other contexts,
-such as HTTPS, but the conventional wisdom is that stream ciphers are unsuitable
-for FDE. Used naively in drive encryption, stream ciphers are vulnerable to
-attacks, and mitigating these attacks with on-drive metadata is generally
-believed to ruin performance.
-
-In this paper, we argue that recent developments in mobile hardware invalidate
-this assumption, making it possible to use fast stream ciphers for FDE. Modern
-mobile devices employ solid-state storage with Flash Translation Layers (FTL),
-which operate similarly to Log-structured File Systems (LFS). They also include
-trusted hardware such as Trusted Execution Environments (TEEs) and secure
-storage areas. Leveraging these two trends, we propose StrongBox, a stream
-cipher-based FDE layer that is a drop-in replacement for dm-crypt, the standard
-Linux FDE module based on AES-XTS. StrongBox introduces a system design and
-on-drive data structures that exploit LFS's lack of overwrites to avoid costly
-rekeying and a counter stored in trusted hardware to protect against attacks. We
-implement StrongBox on an ARM big.LITTLE mobile processor and test its
-performance under multiple popular production LFSes. We find that StrongBox
-improves read performance by as much as $2.36\times$ ($1.72\times$ on average)
-while offering stronger integrity guarantees.
-
 Full drive encryption (FDE)\footnote{The common term is full \emph{disk}
 encryption, but this work targets SSDs, so we use \emph{drive}.} is an essential
 technique for protecting the privacy of data at rest. For mobile devices,
@@ -71,7 +46,7 @@ for confidentiality and performance with integrity preserving Message
 Authentication Codes~\cite{MAC} or ``MAC tags'' and a secure, persistent
 hardware counter to ensure integrity and prevent attacks. \emph{StrongBox's main
 contribution is a system design enabling the first confidential, high-
-performance drive encryption based on a stream cipher.}
+performance drive encryption scheme based on a stream cipher.}
 
 We demonstrate StrongBox's effectiveness on a mobile ARM big.LITTLE system---a
 Samsung Exynos Octa 5---running Ubuntu Trusty 14.04 LTS, kernel 3.10.58. We use
@@ -115,7 +90,8 @@ times and take the median time for each of encryption and decryption.
 \figref{motivation} shows the distinct advantage of the stream cipher over
 AES---a consistent $2.7\times$ reduction in run time.
 
-\begin{figure}[t]
+\begin{figure}[ht]
+  \centering
   \input{data/sb/heuristics-time.tex}
 \caption{AES-XTS and ChaCha20+Poly1305 Comparison.} \label{fig:motivation}
 \end{figure}
@@ -150,7 +126,7 @@ times data is overwritten for each file system.
   LogFS   &   4,244 &     32\\
   NILFS   &   4,199 &     24\\
   F2FS    &   2.107 &      2\\
-  \hline 
+  \hline
   \hline
 \end{tabular}
 %\vskip -.7em

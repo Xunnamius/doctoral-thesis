@@ -1,39 +1,33 @@
 \renewcommand\thechapter{A}
 \chapter{Code Availability} \label{app:availability}
 
-\TODO{merge me in; add others}
-
-This appendix provides links for the StrongBox I and StrongBox II source code.
-The two libraries/APIs that our StrongBox implementations rely on are
+This appendix provides links for the StrongBox, SwitchCrypt, and HASCHK source
+code. The two libraries/APIs that StrongBox and SwitchCrypt rely on are
 additionally provided. Note that resource locations, URLs, frameworks,
 interfaces, etc. will likely change overtime, while this text remains static.
 
+We also make our HASCHK frontend and DHT backend components available open
+source for the benefit of the community. We also make publicly available our
+evaluation environment: a patched HotCRP instance.
+
 You can find instructions on how to build, test, and modify the StrongBox source
-in the provided README documentation linked below.
+in the provided README documentation linked below. Our hope is that this work
+motivates further exploration of resource integrity and other SCA mitigation
+strategies and leads to further progress on more exotic FDE schemes.
 
 \begin{table}
     \centering
-    \caption{Provides URLs for the products yielded and/or used by this research.}
+    \caption{Provides URLs for the products yielded and/or used by this research. The first four URIs refer to repositories on GitHub.}
     \begin{tabular}{|r|c|l|l}
         \cline{1-3}
-        \textbf{Project Source} & \textbf{Language} & \textbf{URL} & \\
+        \textbf{Project Source} & \textbf{Language} & \textbf{URI} & \\
         \cline{1-3}
-        StrongBox I Source & C & https://github.com/research/buselfs-public & \\
-        StrongBox II Source & C & https://github.com/research/buselfs2-public & \\
-        SBD Merkle Tree Implementation & C & https://github.com/IAIK/secure-block-device & \\
-        Block Device in User Space (BUSE) & C/Shell & https://github.com/acozzette/BUSE & \\
+        StrongBox Source & C & Xunnamius/strongbox-switchcrypt & \\
+        SwitchCrypt Source & C & Xunnamius/strongbox-switchcrypt & \\
+        SBD MT Source & C & IAIK/secure-block-device & \\
+        BUSE Source & C/Shell & acozzette/BUSE & \\
+        HASCHK Source & JavaScript/Shell & https://haschk.dev & \\
+        HotCRP Testbed & PHP/C/Shell & https://hotcrp.haschk.dev & \\
         \cline{1-3}
     \end{tabular}
 \end{table}
-
-
-
-
-
-We make our HASCHK frontend and DHT backend components available open source
-for the benefit of the community\footnote{HASCHK implementation components:
-\texttt{https://haschk.dev}}. We also make publicly available our evaluation
-environment: a patched HotCRP instance\footnote{HASCHK's HotCRP test
-environment: \texttt{https://hotcrp.haschk.dev}}. Our hope is that this work
-motivates further exploration of resource integrity and other SCA mitigation
-strategies.

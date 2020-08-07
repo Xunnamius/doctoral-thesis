@@ -11,7 +11,7 @@
             xticklabels at=edge bottom,
             yticklabels at=edge left,
             vertical sep=25pt,
-            horizontal sep=15pt,
+            horizontal sep=50pt,
         },
         %axis x line*=bottom,
         height=3cm,
@@ -67,15 +67,23 @@
         % extra y tick label={\empty},
         %bar width=4.5pt, % change size of bars
         %
-        legend cell align=center,
+        legend cell align=left,
         legend style={ column sep=1ex },
         legend entries={
-            {\scriptsize Baseline I/O},
-            {\scriptsize SwitchCrypt Ratio Configuration I/O}
+            {\scriptsize Baseline},
+            {\scriptsize Mirrored},
+            {\scriptsize Selective},
+            {\scriptsize },
+            {\scriptsize },
+            {\scriptsize C8},
+            {\scriptsize C20},
+            {\scriptsize FF},
+            {\scriptsize FB},
+            {\scriptsize FS}
         },
         legend style={
             draw=none,
-            legend columns=4,
+            legend columns=5,
             at={(1.0,1.45)},
             anchor=south,
         },
@@ -83,6 +91,14 @@
         \nextgroupplot[title={40M Mirrored Reads}]
             \addlegendimage{mark=none,red}
             \addlegendimage{mark=otimes,only marks,black}
+            \addlegendimage{mark=oplus,only marks,black}
+            \addlegendimage{only marks,mark=square*,white}
+            \addlegendimage{only marks,mark=square*,white}
+            \addlegendimage{only marks,mark=square*,red}
+            \addlegendimage{only marks,mark=triangle*,red}
+            \addlegendimage{only marks,mark=diamond*,red}
+            \addlegendimage{only marks,mark=pentagon*,red}
+            \addlegendimage{only marks,mark=*,red}
             \addplot [thick, red] table [
                 meta=cipher,
                 x=score,
@@ -313,9 +329,9 @@
         \nextgroupplot[
             legend to name={throwaway17},
             title={4K Mirrored Writes},
-            xlabel={\footnotesize Security Score},
+            xlabel={\footnotesize R+R (norm)},
             xtick={ 0, 1, 2, 3, 4 },
-            xticklabels={ 0,,, 3, \empty }
+            xticklabels={ 0,,, 1, \empty }
         ]
             \addplot [thick, red] table [
                 meta=cipher,
@@ -356,9 +372,9 @@
         \nextgroupplot[
             legend to name={throwaway18},
             title={4K Selective Writes},
-            xlabel={\footnotesize Security Score},
+            xlabel={\footnotesize R+R (norm)},
             xtick={ 0, 1, 2, 3, 4 },
-            xticklabels={ 0,,, 3, \empty }
+            xticklabels={ 0,,, 1, \empty }
         ]
             \addplot [thick, red] table [
                 meta=cipher,

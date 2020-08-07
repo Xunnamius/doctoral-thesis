@@ -20,7 +20,7 @@ the standard Linux Network Block Device (NBD). BUSE allows an operating system
 to transact block I/O requests to and from virtual block devices exposed via
 domain socket.
 
-\PUNT{For experimental purposes, our implementation makes the choice of ciphers
+For experimental purposes, our implementation makes the choice of ciphers
 binary: either the system wants SwitchCrypt to access the backing store using
 the active cipher or the inactive cipher. However, there is no technical
 limitation preventing various different nuggets encrypted with three, four, or
@@ -30,27 +30,24 @@ We use POSIX message queues to indicate intent to switch. A production-ready
 implementation would be greatly simplified by adding an ``intent'' parameter to
 the POSIX \textit{read()} and \textit{write()} system calls, allowing
 SwitchCrypt to more exactly map individual I/O operations to specific areas of
-the backing store when spatially switching. We simulate this with IPC.
-\TODO{This intent parameter could also be a security score or something right?
-You should spell out exactly what that intent parameter means and maybe change
-its name so its use is clearer.} \PUNT{This is especially important when
-considering the selective switching strategy; a production-ready implementation
-supporting selective switching would need to differentiate between metadata
-operations belonging to the filesystem (should be mirrored across all regions)
-and actual end-user data (should be selectively read from and written to nuggets
-in specific regions).}
+the backing store when spatially switching. We simulate this with IPC. This is
+especially important when considering the selective switching strategy; a
+production-ready implementation supporting selective switching would need to
+differentiate between metadata operations belonging to the filesystem (should be
+mirrored across all regions) and actual end-user data (should be selectively
+read from and written to nuggets in specific regions).
 
 Further, to operate securely, SwitchCrypt must be seeded with random data
 initially rather than have the backing store consist of all zeroes. This is a
 one-time cost paid during initialization and has no tangible effect on
-performance. SSDs that support ISE can accomplish this with minimal wear.}
+performance. SSDs that support ISE can accomplish this with minimal wear.
 
 Finally, as the Freestyle cipher is highly configurable, we implement it in
 three different configurations: a ``fast'' mode with parameters
 \\\texttt{FreestyleFast($R_{min}$=$8$, $R_{max}$=$20$, $H_I$=$4$, $I_C$=$8$)}, a
 ``balanced'' mode with parameters \texttt{FreestyleBalanced($R_{min}$=$12$,
-$R_{max}$=$28$, $H_I$=$2$, $I_C$=$10$)}, and a ``secure'' mode with parameters
-\texttt{FreestyleSecure($R_{min}$=$20$, $R_{max}$=$36$, $H_I$=$1$, $I_C$=$12$)}.
+$R_{max}$=$28$, $H_I$=$2$, $I_C$=$10$)}, and a ``strong'' mode with parameters
+\texttt{FreestyleStrong($R_{min}$=$20$, $R_{max}$=$36$, $H_I$=$1$, $I_C$=$12$)}.
 
 Thanks to Freestyle's output randomization (see \secref{sc-design}), we can skip
 the overhead of tracking, detecting, and handling overwrites when nuggets are
@@ -61,11 +58,8 @@ ChaCha20~\cite{Freestyle}.
 
 A naive implementation is trivial (\eg{execute the chosen strategy on every I/O
 operation}), this navigation must occur with acceptable overhead by preserving
-performance wherever possible. The cryptographic driver provides such a
-mechanism, tying together cipher switching strategies and the Generic Stream
-Cipher Interface. \TODO{Which cryptographic driver? You need to clarify if you
-are talking about a piece of our design or something we are using from prior
-work.}
+performance wherever possible. Our cryptographic driver provides such a
+mechanism, tying together cipher switching strategies.
 
 In the cases of Mirrored and Selective switching, we use offset to determine in
 which area of the backing store receives I/O.
@@ -73,8 +67,7 @@ which area of the backing store receives I/O.
 In the case of Forward switching, it is tempting to implement it such that a
 nugget is completely re-ciphered during I/O every time its metadata indicates
 that it was previously encrypted using a non-active cipher. However, such a
-naive implementation can have disastrous effects on performance. \TODO{It is
-not clear why that would be disastrous.}
+naive implementation can have disastrous effects on performance.
 
 First, a nugget is considered \emph{pristine} if it has not had any data written
 into it yet. SwitchCrypt determines if a nugget is pristine by checking the
@@ -96,13 +89,9 @@ re-keying operation every time. On the other hand, during hard re-cipher, the
 nugget's metadata is changed to match the active cipher configuration \emph{and}
 the nugget data is encrypted using the new cipher.
 
-\TODO{Maybe repeat that mirrored relies on someone to implement the fast secure
-erase, so that you can read the fast region until it is time to panic and then
-you quickly erase?  Are there other uses of mirrored?}
-
-When using forward switching other that 0-forward, \ie{N-forward} where $N
-> 0$, only read operations are allowed to trigger hard re-ciphering for nuggets
-other than the currently active nugget. This is still not enough to preserve our
+When using forward switching other that 0-forward, \ie{N-forward} where $N > 0$,
+only read operations are allowed to trigger hard re-ciphering for nuggets other
+than the currently active nugget. This is still not enough to preserve our
 performance advantage, however, as I/O operations can span multiple nuggets, and
 attempting to take advantage of spatial locality after interacting with every
 nugget is counterproductive. Hence, only the last nugget touched by a read
