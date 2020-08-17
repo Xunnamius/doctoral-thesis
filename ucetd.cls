@@ -28,7 +28,7 @@
 
 % Preliminary sections following the table of contents and preceding the body are front matter
 \newcommand{\etdFrontMatter}[1]{
-	\chapter*{#1}
+  \chapter*{#1}
 	\addcontentsline{toc}{chapter}{#1}
 }
 
@@ -194,7 +194,8 @@
 % Bibliography
 % Change ft2,master,refs below to point to your library.bib files
 \newcommand{\makebibliography}{
-	\newpage
+  \newpage
+  \clearpage
 	\addcontentsline{toc}{chapter}{References}
 	\begin{singlespace}
 		\bibliography{ft2,master,refs}
@@ -410,6 +411,7 @@
   \begin{singlespace}
     % This works b/c multiple \newpage's are treated as one
     \newpage
+    \clearpage
     \addcontentsline{toc}{chapter}{List of Tables}
     \oldlistoftables 
   \end{singlespace}
@@ -421,6 +423,7 @@
   \begin{singlespace}
     % This works b/c multiple \newpage's are treated as one
     \newpage
+    \clearpage
     \addcontentsline{toc}{chapter}{List of Figures}
     \oldlistoffigures 
   \end{singlespace}
